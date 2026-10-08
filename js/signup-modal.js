@@ -1,4 +1,5 @@
 (() => {
+  // 로그인·가입 모달과 수신 동의 모달에 필요한 화면 요소를 가져옵니다.
   const dialog = document.querySelector('.signup-modal');
   const loginForm = document.querySelector('[data-login-form]');
   const signupForm = document.querySelector('[data-signup-form]');
@@ -20,6 +21,7 @@
   const withdrawConsentButton = document.querySelector('[data-withdraw-consent]');
   const grantConsentButton = document.querySelector('[data-grant-consent]');
 
+  // 필수 로그인·회원가입 요소가 빠졌으면 모달 전체를 초기화하지 않습니다.
   if (!(dialog instanceof HTMLDialogElement)
     || !(loginForm instanceof HTMLFormElement)
     || !(signupForm instanceof HTMLFormElement)
@@ -36,6 +38,7 @@
     || !(showLoginButton instanceof HTMLButtonElement)) {
     return;
   }
+  // 수신 동의 모달도 이 기능의 일부이므로 요소 누락 시 초기화를 중단합니다.
   if (!(consentDialog instanceof HTMLDialogElement)
     || !(consentMessage instanceof HTMLElement)
     || !(consentStatus instanceof HTMLElement)
@@ -49,6 +52,7 @@
   let authenticated = false;
   let marketingConsent = false;
 
+  // 요청 결과와 로그인 여부를 화면에 반영하는 공통 상태 함수입니다.
   const setStatus = (message) => {
     status.textContent = message;
     status.className = 'register-message register-message-error';
@@ -81,10 +85,12 @@
   };
 
   const loadAuthState = async () => {
+    // 서버 세션과 CSRF 토큰을 읽어 로그인 버튼과 양식에 반영합니다.
     const response = await fetch('auth.php', {
       headers: { Accept: 'application/json' },
     });
     const result = await response.json();
+    // 서버 오류나 누락된 CSRF 토큰이 있으면 인증 상태를 신뢰하지 않습니다.
     if (!response.ok || typeof result.csrfToken !== 'string') {
       throw new Error(result.message || '로그인 정보를 불러오지 못했습니다.');
     }
@@ -101,22 +107,26 @@
 
   const handleFormSubmit = async (form) => {
     const submitButton = form.querySelector('button[type="submit"]');
+    // 제출 버튼이 없으면 중복 제출 방지 처리를 할 수 없어 요청을 보내지 않습니다.
     if (!(submitButton instanceof HTMLButtonElement)) return;
 
     submitButton.disabled = true;
     setStatus('');
     try {
+      // 로그인 또는 회원가입을 처리한 뒤 최신 인증 상태를 화면에 반영합니다.
       const response = await fetch(form.getAttribute('action') || 'register.php', {
         method: 'POST',
         body: new FormData(form),
         headers: { Accept: 'application/json' },
       });
       const result = await response.json();
+      // 서버가 요청을 거부하면 응답 메시지를 보여주고 성공 처리를 중단합니다.
       if (!response.ok) {
         setStatus(result.message || '요청을 처리할 수 없습니다.');
         return;
       }
 
+      // 서버가 새 CSRF 토큰을 돌려준 경우 두 양식 모두 최신 값으로 교체합니다.
       if (typeof result.csrfToken === 'string') {
         csrfToken = result.csrfToken;
         loginForm.querySelector('[name="csrf_token"]').value = csrfToken;
@@ -129,6 +139,7 @@
         result.marketingConsent === true,
       );
 
+      // 로그인 성공은 모달을 닫고, 회원가입 성공은 환영 패널을 보여줍니다.
       if (form === loginForm) {
         dialog.close();
         loginForm.reset();
@@ -154,7 +165,9 @@
   };
 
   openButton.addEventListener('click', async () => {
+    // 로그인 상태에서는 같은 버튼을 로그아웃 동작으로 사용합니다.
     if (authenticated) {
+      // 이미 로그인된 경우 버튼은 로그아웃 요청으로 동작합니다.
       openButton.disabled = true;
       try {
         const formData = new FormData();
@@ -166,6 +179,7 @@
           headers: { Accept: 'application/json' },
         });
         const result = await response.json();
+        // 서버 오류 또는 새 CSRF 토큰 누락은 로그아웃 실패로 처리합니다.
         if (!response.ok || typeof result.csrfToken !== 'string') {
           throw new Error(result.message || '로그아웃하지 못했습니다.');
         }
@@ -173,10 +187,12 @@
         loginForm.querySelector('[name="csrf_token"]').value = csrfToken;
         signupForm.querySelector('[name="csrf_token"]').value = csrfToken;
         setAuthenticated(false);
+        // 모달이 열려 있을 때만 닫고 양식 입력값을 초기화합니다.
         if (dialog.open) dialog.close();
         loginForm.reset();
         signupForm.reset();
       } catch (error) {
+        // 로그아웃 오류를 알릴 수 있도록 모달이 닫혀 있으면 다시 엽니다.
         if (!dialog.open) dialog.showModal();
         setMode('login');
         setStatus(error instanceof Error ? error.message : '로그아웃하지 못했습니다.');
@@ -215,7 +231,9 @@
   });
 
   memberIdentity.addEventListener('click', () => {
+    // 인증된 회원만 저장된 수신 동의 상태를 조회·변경할 수 있습니다.
     if (!authenticated) return;
+    // 회원 인사말을 누르면 현재 이메일 수신 동의 상태를 보여줍니다.
     consentStatus.hidden = true;
     consentMessage.textContent = marketingConsent
       ? '현재 신규 작품 출시 및 이벤트·광고 소식을 이메일로 받는 데 동의한 상태입니다. 아래에서 언제든 수신 동의를 철회할 수 있습니다.'
@@ -235,6 +253,7 @@
     button.disabled = true;
     consentStatus.hidden = true;
     try {
+      // 동의 변경도 CSRF 토큰을 포함해 서버에 저장합니다.
       const formData = new FormData();
       formData.set('action', consent ? 'grant_marketing_consent' : 'withdraw_marketing_consent');
       formData.set('csrf_token', csrfToken);
@@ -244,6 +263,7 @@
         headers: { Accept: 'application/json' },
       });
       const result = await response.json();
+      // HTTP 오류 또는 서버에 저장된 값이 요청과 다르면 변경 실패로 처리합니다.
       if (!response.ok || result.marketingConsent !== consent) {
         throw new Error(result.message || '소식 수신 설정을 변경하지 못했습니다.');
       }
