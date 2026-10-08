@@ -699,6 +699,94 @@ h1 {
 .work-more:hover { color: var(--ink); }
 .work-more span { color: var(--accent); }
 
+/* Featured shop products */
+.home-products {
+  padding: 88px 0;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.home-products-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 34px;
+}
+.home-products-heading h2 {
+  margin: 8px 0 0;
+  font: 400 36px/1.35 'Noto Serif KR', serif;
+  letter-spacing: -0.03em;
+}
+.home-products-heading .work-more { flex: 0 0 auto; margin: 0 0 6px; }
+.home-product-group + .home-product-group { margin-top: 44px; }
+.home-product-group-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.home-product-group-heading h3 {
+  margin: 0;
+  font: 400 22px/1.4 'Noto Serif KR', serif;
+}
+.home-product-group-heading > span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.home-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.home-product-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--card);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.home-product-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-soft);
+  box-shadow: 0 8px 24px rgba(42, 42, 40, 0.07);
+}
+.home-product-image {
+  display: grid;
+  aspect-ratio: 16 / 10;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg-soft);
+  color: var(--accent);
+}
+.home-product-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.home-product-image > span { font: 52px/1 Georgia, serif; }
+.home-product-copy { padding: 16px 18px 18px; }
+.home-product-copy h4 {
+  overflow: hidden;
+  margin: 0;
+  font: 400 17px/1.5 'Noto Serif KR', serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-product-copy p {
+  overflow: hidden;
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-product-price { display: flex; align-items: baseline; gap: 9px; }
+.home-product-price del { color: var(--muted); font-size: 11px; }
+.home-product-price strong { color: #9b3f32; font-size: 13px; font-weight: 600; }
+
 /* Composer */
 .profile {
   padding: 100px 0;
@@ -1314,6 +1402,7 @@ footer strong {
   .commission-bank-details dl > div { grid-template-columns: 1fr; gap: 2px; }
   .news-heading { padding: 56px 0 28px; }
   .news-card-grid { grid-template-columns: 1fr; gap: 14px; }
+  .home-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero {
     grid-template-columns: 1fr;
     padding: 72px 0 60px;
@@ -1347,6 +1436,10 @@ footer strong {
 @media (max-width: 560px) {
   .grid { grid-template-columns: 1fr; }
   .work-grid { grid-template-columns: 1fr; }
+  .home-products { padding: 64px 0; }
+  .home-products-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .home-products-heading h2 { font-size: 30px; }
+  .home-product-grid { grid-template-columns: 1fr; }
   .work h2 { font-size: 30px; }
   .site-footer-inner { grid-template-columns: 1fr; gap: 22px; }
   .site-footer-meta { grid-column: auto; }

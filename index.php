@@ -63,6 +63,9 @@ $homeVideo = null;
 $homeVideoError = false;
 $homeConcertVideos = [];
 $homeConcertError = false;
+$homeScoreProducts = [];
+$homeAudioProducts = [];
+$homeProductsError = false;
 try {
     $pdo = homeDatabaseConnection();
     $statement = $pdo->query(
@@ -115,6 +118,50 @@ try {
     $homeVideoError = true;
     $homeConcertError = true;
 }
+
+try {
+    $productRows = homeDatabaseConnection()->query(
+        'SELECT product_id, product_type, name, subtitle, regular_price_krw, sale_price_krw,
+                cover_path,
+                (SELECT asset_path
+                 FROM product_assets
+                 WHERE product_id = products.product_id AND asset_type = \'preview_image\'
+                 ORDER BY sort_order ASC, asset_id ASC
+                 LIMIT 1) AS preview_image
+         FROM products
+         WHERE is_active = 1 AND product_type IN (1, 2)'
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($productRows as $row) {
+        $imagePath = $row['preview_image'] ?: $row['cover_path'];
+        if ($imagePath !== null
+            && (!is_string($imagePath) || !is_file(__DIR__ . '/' . ltrim($imagePath, '/')))) {
+            $imagePath = null;
+        }
+
+        $product = [
+            'id' => (int) $row['product_id'],
+            'name' => (string) $row['name'],
+            'subtitle' => (string) $row['subtitle'],
+            'regular_price' => (int) $row['regular_price_krw'],
+            'sale_price' => (int) $row['sale_price_krw'],
+            'image' => $imagePath,
+        ];
+        if ((int) $row['product_type'] === 1) {
+            $homeScoreProducts[] = $product;
+        } else {
+            $homeAudioProducts[] = $product;
+        }
+    }
+
+    shuffle($homeScoreProducts);
+    shuffle($homeAudioProducts);
+    $homeScoreProducts = array_slice($homeScoreProducts, 0, 3);
+    $homeAudioProducts = array_slice($homeAudioProducts, 0, 3);
+} catch (PDOException | RuntimeException $exception) {
+    error_log('Homepage shop products database error: ' . $exception->getMessage());
+    $homeProductsError = true;
+}
 ?>
 <!doctype html>
 <html lang="ko">
@@ -123,7 +170,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HANSUL MUSIC | 작곡 · 관현악편곡 · 편곡 · 악보 · 레슨</title>
 <meta name="description" content="한설뮤직 — 작곡, 관현악편곡, 성가곡·일반곡 편곡, 악보 및 음원 제작, 작곡 입시 레슨">
-<link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=27">
+<link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=28">
 <link rel="stylesheet" href="<?= $basePath ?>/css/register.css?v=6">
 </head>
 <body>
@@ -269,6 +316,63 @@ try {
       <p class="hero-video-error">등록된 공연 영상이 없습니다. <a href="<?= $basePath ?>/concert.php">Concert 페이지 보기</a></p>
     <?php endif; ?>
     <a class="work-more" href="concert.php">공연 영상 더 보기 <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+
+<!-- Scores & Recordings -->
+<section class="home-products" id="featured-products">
+  <div class="wrap">
+    <div class="home-products-heading">
+      <div>
+        <div class="section-label">Scores &amp; Recordings</div>
+        <h2>악보와 음원</h2>
+      </div>
+      <a class="work-more" href="<?= $basePath ?>/shop.php">전체 상품 보기 <span aria-hidden="true">→</span></a>
+    </div>
+    <?php if ($homeProductsError): ?>
+      <p class="hero-video-error" role="status">상품을 불러오지 못했습니다. <a href="<?= $basePath ?>/shop.php">상점에서 확인해 주세요.</a></p>
+    <?php else: ?>
+      <?php foreach ([
+          ['title' => '악보', 'label' => 'Scores', 'products' => $homeScoreProducts, 'mark' => '𝄞'],
+          ['title' => '음원', 'label' => 'Recordings', 'products' => $homeAudioProducts, 'mark' => '♪'],
+      ] as $productGroup): ?>
+        <section class="home-product-group" aria-label="<?= escape($productGroup['label']) ?>">
+          <div class="home-product-group-heading">
+            <h3><?= escape($productGroup['title']) ?></h3>
+            <span><?= escape($productGroup['label']) ?></span>
+          </div>
+          <?php if ($productGroup['products'] !== []): ?>
+            <div class="home-product-grid">
+              <?php foreach ($productGroup['products'] as $product): ?>
+                <a class="home-product-card" href="<?= $basePath ?>/shop.php?product_id=<?= $product['id'] ?>#product-<?= $product['id'] ?>">
+                  <div class="home-product-image">
+                    <?php if ($product['image'] !== null): ?>
+                      <img src="<?= $basePath ?>/<?= escape(ltrim($product['image'], '/')) ?>" alt="" loading="lazy" decoding="async">
+                    <?php else: ?>
+                      <span aria-hidden="true"><?= $productGroup['mark'] ?></span>
+                    <?php endif; ?>
+                  </div>
+                  <div class="home-product-copy">
+                    <h4><?= escape($product['name']) ?></h4>
+                    <?php if ($product['subtitle'] !== ''): ?>
+                      <p><?= escape($product['subtitle']) ?></p>
+                    <?php endif; ?>
+                    <div class="home-product-price">
+                      <?php if ($product['regular_price'] > $product['sale_price']): ?>
+                        <del><?= number_format($product['regular_price']) ?>원</del>
+                      <?php endif; ?>
+                      <strong><?= number_format($product['sale_price']) ?>원</strong>
+                    </div>
+                  </div>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php else: ?>
+            <p class="hero-video-error">등록된 상품이 없습니다. <a href="<?= $basePath ?>/shop.php">상점 보기</a></p>
+          <?php endif; ?>
+        </section>
+      <?php endforeach; ?>
+    <?php endif; ?>
   </div>
 </section>
 

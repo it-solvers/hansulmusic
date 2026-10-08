@@ -203,7 +203,7 @@ try {
         <?php endif; ?>
         <?php foreach ($products as $product): ?>
           <?php $isAudio = $product['type'] === 2; ?>
-          <article class="product" data-type="<?= escape((string) $product['type']) ?>"<?= $isAudio ? ' hidden' : '' ?>>
+          <article class="product" id="product-<?= $product['id'] ?>" data-type="<?= escape((string) $product['type']) ?>"<?= $isAudio ? ' hidden' : '' ?>>
             <?php if (!$isAudio && !empty($product['preview_images'])): ?>
               <div class="score-viewer" data-score-viewer>
                 <div class="score-stage">
@@ -330,6 +330,18 @@ try {
         });
       });
     });
+
+    const requestedProductId = new URLSearchParams(window.location.search).get('product_id');
+    const requestedProduct = requestedProductId
+      ? document.getElementById(`product-${requestedProductId}`)
+      : null;
+    // 요청한 상품이 목록에 있을 때 해당 상품의 분류를 열고 위치로 이동합니다.
+    if (requestedProduct instanceof HTMLElement) {
+      const productTab = document.querySelector(`.tab[data-filter="${requestedProduct.dataset.type}"]`);
+      // 상품 분류 탭을 찾은 경우에만 클릭해 목록 필터를 적용합니다.
+      if (productTab instanceof HTMLButtonElement) productTab.click();
+      requestedProduct.scrollIntoView({ block: 'center' });
+    }
 
     const purchaseDialog = document.querySelector('[data-purchase-dialog]');
     let completedProduct = null;
