@@ -1,0 +1,323 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.register-page > main {
+  margin: auto auto 0;
+}
+
+.register-page > footer {
+  align-self: stretch;
+  width: calc(100% + 32px);
+  margin: 40px -16px -40px;
+}
+
+.register-card {
+  width: min(100%, 440px);
+  padding: 42px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.register-card h2 {
+  margin: 0 0 10px;
+  font: 400 34px/1.3 'Noto Serif KR', serif;
+}
+
+.signup-modal {
+  width: min(440px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100% - 32px);
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+}
+
+.signup-modal::backdrop {
+  background: rgba(42, 42, 40, 0.56);
+  backdrop-filter: blur(3px);
+}
+
+.signup-modal .register-card {
+  position: relative;
+  width: 100%;
+  padding: 36px;
+}
+
+.signup-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 28px/1 Arial, sans-serif;
+  cursor: pointer;
+}
+
+.signup-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.signup-modal .register-eyebrow {
+  margin-top: 4px;
+}
+
+.signup-modal .register-card h2 {
+  font-size: 30px;
+}
+
+.auth-success {
+  margin: 24px 0 16px;
+  padding: 24px 18px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  text-align: center;
+}
+
+.auth-success h3 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font: 500 22px/1.4 'Noto Serif KR', serif;
+}
+
+.auth-success p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.auth-success .auth-success-hint {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.signup-modal .register-form input {
+  min-height: 42px;
+}
+
+.signup-modal .register-consent input {
+  min-height: 15px;
+}
+
+.signup-modal .register-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.auth-switch {
+  min-height: 36px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.auth-switch:hover,
+.auth-switch:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.signup-modal .register-footnote {
+  margin-bottom: 0;
+}
+
+.signup-modal [hidden] {
+  display: none !important;
+}
+
+.register-logo {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.register-eyebrow {
+  margin: 38px 0 10px;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.register-card h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+}
+
+.register-intro {
+  margin: 0 0 28px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.register-form {
+  display: grid;
+  gap: 10px;
+}
+
+.register-form label {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.register-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.register-form input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.register-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.register-consent input[type="checkbox"] {
+  width: 15px;
+  min-height: 15px;
+  flex: 0 0 15px;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: var(--dark);
+}
+
+.register-consent strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.consent-modal .register-submit {
+  width: 100%;
+}
+
+.register-submit {
+  min-height: 48px;
+  margin-top: 14px;
+  border: 0;
+  background: var(--dark);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.register-submit:hover {
+  background: #3d3c39;
+}
+
+.register-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.register-divider::before,
+.register-divider::after {
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+  content: "";
+}
+
+.social-signup {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.social-signup button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: not-allowed;
+}
+
+.register-footnote {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.register-message {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.register-message p {
+  margin: 0;
+}
+
+.register-message p + p {
+  margin-top: 4px;
+}
+
+.register-message-success {
+  background: #edf4ec;
+  color: #315b36;
+}
+
+.register-message-error {
+  background: #f8eeee;
+  color: #8a3333;
+}
+
+.register-back {
+  display: block;
+  margin-top: 26px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .register-card {
+    padding: 30px 22px;
+  }
+
+  .signup-modal .register-card {
+    padding: 32px 22px;
+  }
+}

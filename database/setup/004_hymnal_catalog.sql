@@ -1,0 +1,32 @@
+-- Create the final shared hymn and praise-song catalog schema.
+CREATE TABLE hymnal (
+    hymnal_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '자료 ID',
+    catalog_type TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '구분: 1=찬송가, 2=찬양곡',
+    hymnal_type TINYINT UNSIGNED NOT NULL COMMENT '목록 구분: 1~3',
+    hymn_number SMALLINT UNSIGNED NULL COMMENT '찬송가 번호',
+    hymn_title VARCHAR(255) NOT NULL COMMENT '곡명',
+    section_title VARCHAR(160) NULL COMMENT '분류명',
+    video_url VARCHAR(500) NULL COMMENT '대표 영상 링크',
+    soprano_url VARCHAR(500) NULL COMMENT '소프라노 파트 링크',
+    alto_url VARCHAR(500) NULL COMMENT '알토 파트 링크',
+    tenor_url VARCHAR(500) NULL COMMENT '테너 파트 링크',
+    bass_url VARCHAR(500) NULL COMMENT '베이스 파트 링크',
+    chorus_url VARCHAR(500) NULL COMMENT '합창 파트 링크',
+    piano_url VARCHAR(500) NULL COMMENT '피아노 파트 링크',
+    soprano_1_url VARCHAR(500) NULL COMMENT '소프라노 1 파트 링크',
+    soprano_2_url VARCHAR(500) NULL COMMENT '소프라노 2 파트 링크',
+    tenor_1_url VARCHAR(500) NULL COMMENT '테너 1 파트 링크',
+    tenor_2_url VARCHAR(500) NULL COMMENT '테너 2 파트 링크',
+    bass_1_url VARCHAR(500) NULL COMMENT '베이스 1 파트 링크',
+    bass_2_url VARCHAR(500) NULL COMMENT '베이스 2 파트 링크',
+    other_part_links JSON NULL COMMENT '기타 파트 영상 링크',
+    source_url VARCHAR(512) NULL COMMENT '자료 출처 페이지',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT '표시 순서',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '표시 여부',
+    PRIMARY KEY (hymnal_id),
+    KEY idx_hymnal_catalog (catalog_type, is_active, hymnal_type, sort_order, hymnal_id),
+    KEY idx_hymnal_number (hymnal_type, hymn_number),
+    CONSTRAINT chk_hymnal_type CHECK (hymnal_type IN (1, 2, 3)),
+    CONSTRAINT chk_hymnal_catalog_type CHECK (catalog_type IN (1, 2))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='찬송가와 찬양곡 목록 및 영상 링크';
