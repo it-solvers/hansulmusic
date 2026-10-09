@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 작곡가 소개 페이지의 공통 설정과 이스케이프 도구를 준비합니다.
 require_once __DIR__ . '/site-config.php';
 
+/** 작곡가 소개 페이지의 문자열을 HTML에 안전하게 출력하도록 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -11,6 +13,7 @@ function escape(string $value): string
 $basePath = escape(appBasePath());
 ?>
 <!doctype html>
+<!-- [1단계] 작곡가 소개와 주요 경력을 문서 본문에 출력합니다. -->
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -22,8 +25,11 @@ $basePath = escape(appBasePath());
 </head>
 <body class="site-nav-page">
   <?php
+  // [2단계] 요청 언어에 맞는 공통 내비게이션을 포함합니다.
   $headerActivePage = 'composer';
-  require __DIR__ . '/site-header.php';
+  // [3단계] 영문 요청에만 영문 내비게이션을 선택하고 기본은 한국어로 둡니다.
+  $headerIsEnglish = ($_GET['lang'] ?? '') === 'en';
+  require __DIR__ . ($headerIsEnglish ? '/en/site-header.php' : '/site-header-ko.php');
   ?>
 
   <main class="composer-page">
@@ -105,9 +111,13 @@ $basePath = escape(appBasePath());
     </div>
   </main>
 
-  <?php require __DIR__ . '/site-footer.php'; ?>
+  <?php
+  // [2단계] 본문 언어와 같은 푸터 템플릿을 공통 경유 파일로 불러옵니다.
+  $footerLanguage = $headerIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/site-footer.php';
+  ?>
   <?php require __DIR__ . '/auth-modal.php'; ?>
   <script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
-  <script src="<?= $basePath ?>/js/navigation.js?v=2" defer></script>
+  <script src="<?= $basePath ?>/js/navigation.js?v=3" defer></script>
 </body>
 </html>

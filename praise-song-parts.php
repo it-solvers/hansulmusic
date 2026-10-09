@@ -1,19 +1,26 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 찬양곡 파트 연습 페이지의 공통 설정과 카탈로그 처리를 준비합니다.
 require_once __DIR__ . '/site-config.php';
 
+// [2단계] 화면에 출력할 문자열을 HTML 문맥에 맞게 이스케이프합니다.
+/** 찬양곡 화면에 출력할 문자열의 HTML 특수 문자를 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// [2단계] 추가 파트 링크 JSON을 화면용 파트-주소 배열로 변환합니다.
+/** 추가 파트 링크 JSON을 파트명을 키로 하는 URL 배열로 변환합니다. */
 function decodeAdditionalPartLinks(?string $value): array
 {
+    // [3단계] 추가 링크 값이 비어 있으면 빈 배열로 처리합니다.
     if ($value === null || $value === '') {
         return [];
     }
 
+    // [3단계] 각 항목에 문자열 파트명과 URL이 있는지 확인합니다.
     $items = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($items)) {
         throw new UnexpectedValueException('Invalid additional praise-song part links.');
@@ -34,6 +41,8 @@ function decodeAdditionalPartLinks(?string $value): array
     return $links;
 }
 
+// [2단계] DB 접속 정보를 확인하고 예외 기반 PDO 연결을 구성합니다.
+/** 필수 DB 환경 변수를 검증하고 찬양곡 카탈로그용 PDO 연결을 반환합니다. */
 function databaseConnection(): PDO
 {
     $user = getenv('DB_USER');
@@ -55,10 +64,13 @@ function databaseConnection(): PDO
     );
 }
 
+// [1단계] 활성 찬양곡을 조회해 탭별 목록과 절기 선택 데이터를 구성합니다.
 $basePath = appBasePath();
 $songs = [];
 $loadError = false;
 try {
+    // [3단계] hymnal에서 활성 찬양곡(catalog_type 2)을 분류·순서대로 가져와 $songs에 저장합니다.
+    // 아래 목록 반복문은 제목·절기·파트별 영상 링크를 카드 데이터와 화면에 연결합니다.
     $statement = databaseConnection()->query(
         'SELECT hymnal_id, hymnal_type, hymn_title, section_title,
                 video_url, soprano_url, alto_url, tenor_url, bass_url, chorus_url,
@@ -70,6 +82,7 @@ try {
     );
     $songs = $statement->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException | RuntimeException $exception) {
+    // [3단계] 카탈로그 조회에 실패하면 503 상태와 화면 오류 플래그를 설정합니다.
     error_log('Praise song catalog database error: ' . $exception->getMessage());
     http_response_code(503);
     $loadError = true;
@@ -82,7 +95,9 @@ $tabs = [
 ];
 $seasons = [];
 $seasonOrder = [];
+// [2단계] 절기형 자료의 고유 분류와 원래 순서를 기록한 뒤 표시용으로 정렬합니다.
 foreach ($songs as $song) {
+    // [3단계] 절기형 탭에 속하고 분류명이 있는 자료만 절기 필터에 포함합니다.
     if ((int) $song['hymnal_type'] === 1
         && is_string($song['section_title'])
         && $song['section_title'] !== ''
@@ -109,9 +124,12 @@ natcasesort($seasons);
 <body class="site-nav-page">
   <?php
   $headerActivePage = 'praise';
-  require __DIR__ . '/site-header.php';
+  $headerIsEnglish = ($_GET['lang'] ?? '') === 'en';
+  // [3단계] lang 쿼리 값에 따라 언어별 공통 탐색 메뉴를 선택합니다.
+  require __DIR__ . ($headerIsEnglish ? '/en/site-header.php' : '/site-header-ko.php');
   ?>
 
+  <!-- [1단계] 절기·가나다·알파벳 탭과 검색·정렬·페이지 이동 영역을 렌더링합니다. -->
   <main class="hymnal-page">
     <div class="wrap">
       <section class="hymnal-heading">
@@ -162,9 +180,11 @@ natcasesort($seasons);
             </div>
           </div>
           <div class="hymnal-list" data-hymnal-list>
+            <!-- [3단계] $songs의 각 DB 행을 곡 카드의 제목·절기·파트별 링크로 출력합니다. -->
             <?php foreach ($songs as $song): ?>
               <?php
                 $type = (int) $song['hymnal_type'];
+                // [2단계] 기본 파트 주소에 등록된 추가 링크를 합쳐 곡별 영상 목록을 만듭니다.
                 $partLinks = [
                     'S' => $song['soprano_url'],
                     'A' => $song['alto_url'],
@@ -202,6 +222,7 @@ natcasesort($seasons);
                   <h2><?= escape((string) $song['hymn_title']) ?></h2>
                 </div>
                 <div class="hymnal-links" aria-label="연습 영상">
+                  <!-- [3단계] 파트별 링크를 우선 제공하고, 없으면 공통 영상 또는 준비 중 안내를 표시합니다. -->
                   <?php if ($hasPartLinks): ?>
                     <?php foreach ($partLinks as $part => $url): ?>
                       <?php if (is_string($url) && $url !== ''): ?>
@@ -228,7 +249,10 @@ natcasesort($seasons);
     </div>
   </main>
 
-  <?php require __DIR__ . '/site-footer.php'; ?>
+  <?php
+  $footerLanguage = $headerIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/site-footer.php';
+  ?>
 
   <dialog class="concert-player" aria-label="찬양곡 영상 플레이어">
     <div class="concert-player-content">
@@ -239,7 +263,7 @@ natcasesort($seasons);
 
   <?php require __DIR__ . '/auth-modal.php'; ?>
   <script src="<?= escape($basePath) ?>/js/signup-modal.js?v=13" defer></script>
-  <script src="<?= escape($basePath) ?>/js/navigation.js?v=2" defer></script>
+  <script src="<?= escape($basePath) ?>/js/navigation.js?v=3" defer></script>
   <script src="<?= escape($basePath) ?>/js/concert.js?v=6" defer></script>
   <script src="<?= escape($basePath) ?>/js/hymnal-parts.js?v=7" defer></script>
 </body>

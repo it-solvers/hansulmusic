@@ -1,13 +1,18 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 홈페이지에 필요한 공통 설정과 동적 콘텐츠를 준비합니다.
 require_once __DIR__ . '/site-config.php';
 
+// [2단계] HTML 출력에 사용할 문자열을 안전하게 이스케이프합니다.
+/** 홈페이지 콘텐츠를 HTML에 안전하게 출력하도록 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// [2단계] 홈페이지 영상과 상품 조회에 사용할 DB 연결을 생성합니다.
+/** 홈페이지 영상·상품 조회에 사용할 PDO 연결을 반환합니다. */
 function homeDatabaseConnection(): PDO
 {
     $user = getenv('DB_USER');
@@ -29,9 +34,12 @@ function homeDatabaseConnection(): PDO
     );
 }
 
+// [2단계] 지원하는 YouTube 주소에서 영상 ID를 추출합니다.
+/** 허용된 HTTPS YouTube 주소에서 유효한 영상 ID를 추출하고, 아니면 null을 반환합니다. */
 function homeYouTubeVideoId(string $url): ?string
 {
     $parts = parse_url($url);
+    // [3단계] HTTPS 주소와 호스트가 확인되지 않으면 허용하지 않습니다.
     if ($parts === false
         || strtolower($parts['scheme'] ?? '') !== 'https'
         || !isset($parts['host'])) {
@@ -55,9 +63,11 @@ function homeYouTubeVideoId(string $url): ?string
         return null;
     }
 
+    // [3단계] 추출 결과가 YouTube 영상 ID 형식과 일치하는지 검증합니다.
     return preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId) === 1 ? $videoId : null;
 }
 
+// [1단계] 홈페이지에 표시할 영상·상품 데이터를 조회하고 표시용으로 가공합니다.
 $basePath = escape(appBasePath());
 $homeVideo = null;
 $homeVideoError = false;
@@ -67,7 +77,9 @@ $homeScoreProducts = [];
 $homeAudioProducts = [];
 $homeProductsError = false;
 try {
+    // [2단계] 유효한 작곡 영상 하나와 중복 없는 공연 영상 목록을 구성합니다.
     $pdo = homeDatabaseConnection();
+    // [3단계] videos에서 활성 작곡 영상을 읽고, 아래 대표 영상 영역에 쓸 ID·제목만 보관합니다.
     $statement = $pdo->query(
         'SELECT video_title, video_url
          FROM videos
@@ -77,6 +89,7 @@ try {
     foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $videoId = homeYouTubeVideoId((string) $row['video_url']);
         if ($videoId === null) {
+            // [3단계] 잘못된 영상 주소는 제외하고 서버 로그에 기록합니다.
             error_log('Homepage composition video row contains an invalid YouTube URL.');
             continue;
         }
@@ -90,6 +103,8 @@ try {
         $homeVideo = $compositionVideos[random_int(0, count($compositionVideos) - 1)];
     }
 
+    // [2단계] videos에서 활성 공연 영상을 조회해 중복 제거 후 무작위로 최대 세 개만 노출합니다.
+    // [3단계] 가공한 $homeConcertVideos는 아래 Concert 카드 반복문에서 제목과 썸네일로 표시합니다.
     $statement = $pdo->query(
         'SELECT video_title, video_url
          FROM videos
@@ -102,6 +117,7 @@ try {
             error_log('Homepage concert video row contains an invalid YouTube URL.');
             continue;
         }
+        // [3단계] 같은 영상이 여러 번 등록된 경우 첫 항목만 유지합니다.
         if (isset($concertVideoIds[$videoId])) {
             continue;
         }
@@ -119,7 +135,10 @@ try {
     $homeConcertError = true;
 }
 
+// [2단계] 활성 상품을 종류별로 나누고, 노출할 이미지와 목록을 정리합니다.
 try {
+    // [3단계] products에서 활성 악보·음원과 가격을, product_assets에서 첫 악보 미리보기 경로를 가져옵니다.
+    // 조회 결과는 아래 상품 소개 영역에서 $homeScoreProducts와 $homeAudioProducts 카드로 출력합니다.
     $productRows = homeDatabaseConnection()->query(
         'SELECT product_id, product_type, name, subtitle, regular_price_krw, sale_price_krw,
                 cover_path,
@@ -134,6 +153,7 @@ try {
 
     foreach ($productRows as $row) {
         $imagePath = $row['preview_image'] ?: $row['cover_path'];
+        // [3단계] 미리보기와 표지 모두 사용할 수 없는 경로는 이미지 없이 표시합니다.
         if ($imagePath !== null
             && (!is_string($imagePath) || !is_file(__DIR__ . '/' . ltrim($imagePath, '/')))) {
             $imagePath = null;
@@ -211,10 +231,11 @@ try {
 <div class="wrap">
   <?php
   $headerActivePage = 'home';
-  require __DIR__ . '/site-header.php';
+  require __DIR__ . '/site-header-ko.php';
   ?>
 
   <main>
+    <!-- [1단계] 홈페이지의 대표 소개와 주요 서비스·작품·상품을 구성합니다. -->
     <!-- Hero -->
     <section class="hero">
       <div>
@@ -228,6 +249,8 @@ try {
           <a class="btn ghost" href="#services">서비스 보기</a>
         </div>
       </div>
+      <!-- [3단계] 대표 영상이 없을 때는 조회 오류와 미등록 상태를 구분해 안내합니다. -->
+      <!-- [3단계] DB에서 고른 대표 작곡 영상은 이 영역에 썸네일·제목으로 표시합니다. -->
       <?php if ($homeVideo !== null): ?>
         <?php $homeVideoTitle = $homeVideo['title'] !== '' ? $homeVideo['title'] : 'Composition'; ?>
         <article class="concert-video">
@@ -312,8 +335,10 @@ try {
   <div class="wrap">
     <div class="section-label">Concert</div>
     <h2>작품 연주 영상을 만나보세요.</h2>
+    <!-- [3단계] 공연 영상 목록의 오류·빈 상태는 성공 조회와 별도로 표시합니다. -->
     <?php if ($homeConcertVideos !== []): ?>
       <div class="work-grid">
+        <!-- [3단계] 조회 단계에서 검증한 공연 영상만 카드·재생 버튼·YouTube 제목 링크로 표시합니다. -->
         <?php foreach ($homeConcertVideos as $index => $video): ?>
           <?php $concertTitle = $video['title'] !== '' ? $video['title'] : 'Concert Video ' . ($index + 1); ?>
           <article class="work-card">
@@ -346,9 +371,11 @@ try {
       </div>
       <a class="work-more" href="<?= $basePath ?>/shop.php">전체 상품 보기 <span aria-hidden="true">→</span></a>
     </div>
+    <!-- [3단계] 상품 조회 실패와 정상적인 상품 미등록 상태를 구분해 안내합니다. -->
     <?php if ($homeProductsError): ?>
       <p class="hero-video-error" role="status">상품을 불러오지 못했습니다. <a href="<?= $basePath ?>/shop.php">상점에서 확인해 주세요.</a></p>
     <?php else: ?>
+      <!-- [3단계] 앞서 조회한 상품 배열을 악보·음원 그룹의 상품 카드로 출력합니다. -->
       <?php foreach ([
           ['title' => '악보', 'label' => 'Scores', 'products' => $homeScoreProducts, 'mark' => '𝄞'],
           ['title' => '음원', 'label' => 'Recordings', 'products' => $homeAudioProducts, 'mark' => '♪'],
@@ -366,6 +393,7 @@ try {
                     <?php if ($product['image'] !== null): ?>
                       <img src="<?= $basePath ?>/<?= escape(ltrim($product['image'], '/')) ?>" alt="" loading="lazy" decoding="async">
                     <?php else: ?>
+                      <!-- [3단계] 이미지가 없는 상품은 종류별 기호를 대체 표시합니다. -->
                       <span aria-hidden="true"><?= $productGroup['mark'] ?></span>
                     <?php endif; ?>
                   </div>
@@ -486,16 +514,24 @@ try {
           <p class="commission-bank-intro">이 안내는 작곡·편곡 맞춤 의뢰에 적용되며, 악보·음원 등 일반 상품 결제와는 별도입니다.</p>
           <ol>
             <li>
-              <span>국내 의뢰: 견적과 작업 범위를 확정한 뒤 아래 계좌로 이체해 주세요. 결제 시기와 금액은 견적 안내 시 함께 확인합니다.</span>
-              <span lang="en">For commissions in Korea, transfer payment to the account below after confirming the quote and scope. Payment timing and amount will be provided with the quote.</span>
+              <span><strong>상담 및 견적 확인:</strong> 의뢰 내용을 확인한 뒤 작업 범위, 금액, 일정, 수정 횟수, 제공 파일과 취소·환불 조건을 이메일로 안내해 드립니다. 내용을 충분히 확인하고 동의한 뒤 진행 여부를 결정해 주세요.</span>
+              <span lang="en"><strong>Discuss and review the quote:</strong> We will email the scope, price, schedule, number of revisions, deliverables, and cancellation/refund terms. Review and approve these details before proceeding.</span>
             </li>
             <li>
-              <span>해외 의뢰: 견적 확정 후 PayPal 청구서(Invoice)를 이메일로 보내드립니다. PayPal 홈페이지에서 먼저 가입하거나 바로 결제하실 필요는 없습니다.</span>
-              <span lang="en">For international commissions, we will email a PayPal invoice after confirming the quote. There is no need to sign up or pay through the PayPal homepage first.</span>
+              <span><strong>국내 결제 및 작업 시작:</strong> 진행에 동의하시면 견적서에 안내된 착수금 또는 전액을 계좌이체해 주세요. 입금이 확인되면 협의한 일정에 따라 작업을 시작합니다. 계좌 예금주가 한상은(한설뮤직)인지 확인해 주세요.</span>
+              <span lang="en"><strong>Payment in Korea and project start:</strong> Once you approve the quote, transfer the deposit or full amount stated in it. Work begins on the agreed schedule after payment is confirmed. The account holder is Sangeun Han (HANSUL MUSIC).</span>
             </li>
             <li>
-              <span>결제가 확인되면 협의한 일정에 따라 작업을 시작합니다.</span>
-              <span lang="en">Work will begin according to the agreed schedule once payment is confirmed.</span>
+              <span><strong>시안 확인:</strong> 진행 중 시안을 공유해 드리며, 견적서에 정한 수정 횟수와 범위 안에서 의견을 반영합니다.</span>
+              <span lang="en"><strong>Review a preview:</strong> We will share a preview during production and make revisions within the scope and number agreed in the quote.</span>
+            </li>
+            <li>
+              <span><strong>잔금 결제 및 최종 파일 전달:</strong> 잔금이 있는 경우 안내된 금액을 이체해 주세요. 결제가 확인되면 최종 악보와 음원을 이메일로 보내드립니다.</span>
+              <span lang="en"><strong>Final payment and delivery:</strong> If a balance is due, transfer the stated amount. Once payment is confirmed, we will email the final score and audio files.</span>
+            </li>
+            <li>
+              <span><strong>해외 의뢰:</strong> 견적 확정 후 PayPal 인보이스를 이메일로 보내드립니다. 최종 결제 금액과 적용 수수료를 인보이스에서 확인한 뒤 결제하시면 됩니다.</span>
+              <span lang="en"><strong>International commissions:</strong> After the quote is approved, we will email a PayPal invoice. Review the final amount and any applicable fees on the invoice before paying.</span>
             </li>
           </ol>
           <div class="commission-bank-details">
@@ -579,7 +615,7 @@ require __DIR__ . '/site-footer.php';
   </div>
 </dialog>
 <script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
-<script src="<?= $basePath ?>/js/navigation.js?v=2" defer></script>
+<script src="<?= $basePath ?>/js/navigation.js?v=3" defer></script>
 <script src="<?= $basePath ?>/js/concert.js?v=7" defer></script>
 <script src="<?= $basePath ?>/js/commission-inquiry.js?v=1" defer></script>
 </body>

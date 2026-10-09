@@ -1,7 +1,10 @@
 <?php
+// [1단계] 로그인·가입 및 소식 수신 설정 대화상자의 언어와 요청 경로를 준비합니다.
 $authIsEnglish = ($authLanguage ?? '') === 'en';
+// [3단계] 호출 측에서 경로를 넘기지 않으면 현재 사이트 기준 경로를 사용합니다.
 $authActionBase = isset($authFormBasePath) ? rtrim($authFormBasePath, '/') : rtrim(appBasePath(), '/');
 ?>
+<!-- [1단계] 로그인과 회원가입 상태를 전환하는 인증 대화상자입니다. -->
 <dialog class="signup-modal" aria-labelledby="auth-title">
   <section class="register-card">
     <button class="signup-close" type="button" aria-label="<?= $authIsEnglish ? 'Close sign-in window' : 'Sign in 창 닫기' ?>" data-close-auth>&times;</button>
@@ -14,6 +17,7 @@ $authActionBase = isset($authFormBasePath) ? rtrim($authFormBasePath, '/') : rtr
       <p><?= $authIsEnglish ? 'Your account has been created and you are signed in.' : '회원가입과 동시에 자동으로 로그인되었습니다.<br>이제 회원 기능을 이용하실 수 있습니다.' ?></p>
       <p class="auth-success-hint"><?= $authIsEnglish ? 'Select × in the upper-right corner to close this window.' : '창을 닫으려면 오른쪽 위의 ×를 눌러 주세요.' ?></p>
     </div>
+    <!-- [2단계] 로그인 폼은 세션 토큰과 인증 정보를 auth.php로 전송합니다. -->
     <form method="post" action="<?= htmlspecialchars($authActionBase . '/auth.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" class="register-form" data-login-form>
       <input type="hidden" name="csrf_token">
       <input type="hidden" name="action" value="login">
@@ -24,6 +28,7 @@ $authActionBase = isset($authFormBasePath) ? rtrim($authFormBasePath, '/') : rtr
       <button type="submit" class="register-submit">Sign in</button>
       <button type="button" class="auth-switch" data-show-signup>Create account</button>
     </form>
+    <!-- [2단계] 가입 폼은 이메일·비밀번호 확인값과 선택 동의 여부를 함께 전송합니다. -->
     <form method="post" action="<?= htmlspecialchars($authActionBase . '/register.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" class="register-form" data-signup-form hidden>
       <input type="hidden" name="csrf_token">
       <label for="signup-name"><?= $authIsEnglish ? 'Name' : '이름' ?></label>
@@ -46,6 +51,7 @@ $authActionBase = isset($authFormBasePath) ? rtrim($authFormBasePath, '/') : rtr
     <p class="register-footnote"><?= $authIsEnglish ? 'Email verification, social sign-in, and email updates will be available in the future.' : '이메일 인증, 간편 로그인 및 소식 이메일 발송은 추후 지원 예정입니다.' ?></p>
   </section>
 </dialog>
+<!-- [1단계] 로그인한 회원이 마케팅 소식 수신 동의를 관리하는 대화상자입니다. -->
 <dialog class="signup-modal consent-modal" aria-labelledby="consent-title" data-consent-modal>
   <section class="register-card">
     <button class="signup-close" type="button" aria-label="<?= $authIsEnglish ? 'Close email preferences' : '수신 동의 창 닫기' ?>" data-close-consent>&times;</button>

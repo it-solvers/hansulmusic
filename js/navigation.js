@@ -11,7 +11,10 @@
   const setMenuOpen = (open) => {
     // 시각적 메뉴 상태와 스크린 리더용 버튼 상태를 함께 갱신합니다.
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+    toggle.setAttribute(
+      'aria-label',
+      open ? toggle.dataset.closeLabel : toggle.dataset.openLabel,
+    );
     nav.classList.toggle('is-open', open);
   };
 
