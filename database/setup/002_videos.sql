@@ -1,4 +1,5 @@
--- Create the unified video schema and load its initial records.
+-- [1단계] Concert 페이지와 YouTube 페이지가 함께 사용하는 영상 테이블을 만들고 초기 자료를 등록합니다.
+-- is_active=1인 영상만 각 페이지와 홈페이지에 표시하고, is_active=0인 영상은 숨기되 행은 유지합니다.
 CREATE TABLE videos (
     video_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '영상 ID',
     video_type TINYINT(1) NOT NULL COMMENT '표시 페이지: 1=Concert, 2=YouTube',
@@ -6,7 +7,7 @@ CREATE TABLE videos (
     video_title VARCHAR(255) NULL COMMENT '영상 제목',
     video_url VARCHAR(500) NOT NULL COMMENT 'YouTube 영상 URL',
     sort_order INT NOT NULL DEFAULT 0 COMMENT '표시 순서',
-    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '표시 여부',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '표시 상태: 1=표시, 0=숨김(행 유지)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록 시각',
     PRIMARY KEY (video_id),
     KEY idx_videos_display (video_type, role, is_active, sort_order, video_id)

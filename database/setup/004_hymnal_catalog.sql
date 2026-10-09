@@ -1,8 +1,9 @@
--- Create the final shared hymn and praise-song catalog schema.
+-- [1단계] 찬송가 페이지와 찬양곡 페이지가 공유하는 자료 테이블을 만듭니다.
+-- 각 페이지는 is_active=1인 자료만 표시하고, is_active=0인 자료는 숨기되 행은 유지합니다.
 CREATE TABLE hymnal (
     hymnal_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '자료 ID',
     catalog_type TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '구분: 1=찬송가, 2=찬양곡',
-    hymnal_type TINYINT UNSIGNED NOT NULL COMMENT '목록 구분: 1~3',
+    hymnal_type TINYINT UNSIGNED NOT NULL COMMENT 'catalog_type=1(찬송가): 1=찬송가, 2=새찬송가, 3=영문찬송가; catalog_type=2(찬양곡): 1=절기별, 2=가나다순, 3=알파벳순',
     hymn_number SMALLINT UNSIGNED NULL COMMENT '찬송가 번호',
     hymn_title VARCHAR(255) NOT NULL COMMENT '곡명',
     section_title VARCHAR(160) NULL COMMENT '분류명',
@@ -22,7 +23,7 @@ CREATE TABLE hymnal (
     other_part_links JSON NULL COMMENT '기타 파트 영상 링크',
     source_url VARCHAR(512) NULL COMMENT '자료 출처 페이지',
     sort_order INT NOT NULL DEFAULT 0 COMMENT '표시 순서',
-    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '표시 여부',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '표시 상태: 1=표시, 0=숨김(행 유지)',
     PRIMARY KEY (hymnal_id),
     KEY idx_hymnal_catalog (catalog_type, is_active, hymnal_type, sort_order, hymnal_id),
     KEY idx_hymnal_number (hymnal_type, hymn_number),

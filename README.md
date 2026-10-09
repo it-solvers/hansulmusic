@@ -72,18 +72,43 @@ VALUES (2, 1, 'Video title', 'https://youtu.be/VIDEO_ID', 1, 1);
 Use the next `sort_order` number within each type to place the video at the end.
 Set `is_active` to `0` to hide a video without deleting its row. The pages
 accept standard YouTube watch, short, live, and embed URLs; other hosts or
-invalid video IDs are not embedded. There is no separate admin screen because
-entries are managed directly in the hosting provider's database manager.
+invalid video IDs are not embedded. Video entries are still managed directly
+in the hosting provider's database manager.
 
 ## Shop products
 
-`003_shop_products.sql` creates the `products` and `product_assets` tables
-and seeds the current score and audio listings. The shop page reads active
-product rows from these tables in `sort_order` order. Update prices,
-descriptions, and file paths in `products`; add or reorder score preview
-images in `product_assets`. Set a product's `is_active` value to `0` to remove
-it from the shop without deleting the record. Product entries are managed
-directly in the database manager; an admin screen is not included.
+`003_shop_products.sql` creates and seeds the `products` and `product_assets`
+tables. `products.is_active=1` means the product is displayed in the shop;
+`is_active=0` hides it while retaining the database row. The shop page reads
+active products in `sort_order` order. Product kind is `product_type` (1 = score, 2 = audio), one product per kind; it also links the English shop copy in `product-localization.php`. For an existing database, run `database/setup/007_drop_product_slug.sql` once as a DB admin to drop the old `slug` column. Product records, cover images, preview
+audio, downloadable files, and score preview images can be managed at
+`/admin-products.php`; the footer's small dot links to this page.
+Concert/YouTube videos, hymnals, and praise songs are managed at
+`/admin-media.php` with the same login (shared code in `admin-auth.php`);
+rows are never deleted, and unchecking "진열 상태" sets `is_active = 0`.
+
+Create a hidden file named `.admin-products-login` in the project root beside
+`docker-compose.yml` and the `html/` directory. Put the administrator login
+name on the first line and the `password_hash()` value of the password on the second line, with no
+other lines. Docker Compose mounts this file read-only at
+`/var/www/.admin-products-login` in the PHP container; create the file before
+starting or recreating that service. On the standard PHP image, make it
+readable to the PHP-FPM worker while restricting other users, for example:
+`sudo chown 33:33 .admin-products-login && sudo chmod 600 .admin-products-login`.
+Keep this server-only file outside the source repository and do not place it
+under the public `html/` directory. The admin page fails closed if the file is
+missing or invalid, and protects changes with a session and CSRF token.
+
+Product files live under `product-media/` — covers in `product-media/covers/`, score preview images in `product-media/scores/`, preview audio in `product-media/music/`, downloads in `product-media/scoreszip/` (scores) or `product-media/music/` (audio products) and require the PHP-FPM user to be
+able to create and write files in the site directory. Set PHP-FPM's
+`upload_max_filesize` to at least `100M` and `post_max_size` to at least `120M`
+to allow the largest supported single upload. Covers and score previews accept
+JPG, PNG, or WebP; preview audio accepts MP3, WAV, M4A, or OGG; downloads
+accept PDF or ZIP for scores and audio or ZIP for audio products. Filenames are randomized and their relative paths are saved
+in the product tables. Existing score-preview labels and order can be edited;
+images can be added. The admin page does not delete products, preview records,
+or file associations; to stop showing a product, uncheck its display status
+(`is_active=0`). Replacing a file preserves the old file on disk.
 
 ## Hymnal parts
 

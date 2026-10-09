@@ -26,6 +26,9 @@ $footerSiteBase = htmlspecialchars($footerScriptBase, ENT_QUOTES | ENT_SUBSTITUT
       <p>주소: 인천, 연수구 앵고개로 262, 8069호 (오피스밸리)</p>
       <p><a href="mailto:sangeun@hansulmusic.com">sangeun@hansulmusic.com</a></p>
     </div>
-    <p class="site-footer-copyright">Copyright © 2016 HANSUL MUSIC. All rights reserved.</p>
+    <p class="site-footer-copyright">
+      <span>Copyright © 2016 HANSUL MUSIC. All rights reserved.</span>
+      <a class="site-footer-admin-dot" href="<?= $footerSiteBase ?>/admin-products.php" aria-label="관리자 상품 관리">·</a>
+    </p>
   </div>
 </footer>

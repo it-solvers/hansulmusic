@@ -70,8 +70,9 @@ try {
     $pdo = databaseConnection();
     // [3단계] products에서 활성 상품의 이름·가격·자산 경로를 가져와 $products에 담습니다.
     // 아래 카탈로그 반복문이 이 데이터를 상품 설명·가격·구매 동작으로 출력합니다.
+    // 영문 페이지에서는 product_type(1=악보, 2=음원)으로 번역 문구를 찾습니다.
     $productRows = $pdo->query(
-        'SELECT product_id, product_type, slug, name, subtitle, description,
+        'SELECT product_id, product_type, name, subtitle, description,
                 regular_price_krw, sale_price_krw, cover_path,
                 preview_audio_path, download_path
          FROM products
@@ -83,7 +84,7 @@ try {
         $productId = (int) $row['product_id'];
         $copy = $shopIsEnglish
             ? englishProductCopy(
-                (string) $row['slug'],
+                (int) $row['product_type'],
                 (string) $row['name'],
                 (string) $row['subtitle'],
                 (string) $row['description'],
