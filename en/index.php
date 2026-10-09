@@ -144,8 +144,9 @@ try {
 try {
     // [3단계] products에서 활성 악보·음원과 가격을, product_assets에서 첫 미리보기 경로를 가져옵니다.
     // 결과는 아래 Scores와 Recordings 영역의 카드에 표시합니다.
+    // 영문 번역 문구는 product_type(1=악보, 2=음원)으로 찾습니다.
     $productRows = englishHomeDatabaseConnection()->query(
-        'SELECT product_id, product_type, slug, name, subtitle, regular_price_krw, sale_price_krw,
+        'SELECT product_id, product_type, name, subtitle, regular_price_krw, sale_price_krw,
                 cover_path,
                 (SELECT asset_path
                  FROM product_assets
@@ -164,7 +165,7 @@ try {
             $imagePath = null;
         }
         $copy = englishProductCopy(
-            (string) $row['slug'],
+            (int) $row['product_type'],
             (string) $row['name'],
             (string) $row['subtitle'],
             '',

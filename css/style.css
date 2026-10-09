@@ -1352,6 +1352,10 @@ footer {
 }
 .site-footer-meta p { margin: 0 0 8px; }
 .site-footer-copyright {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   grid-column: 1 / -1;
   align-self: end;
   margin: 0;
@@ -1359,6 +1363,14 @@ footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
   text-align: left;
+}
+.site-footer-admin-dot {
+  display: inline-block;
+  padding: 0 4px;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  text-decoration: none;
 }
 footer strong {
   color: var(--ink-soft);

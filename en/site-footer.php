@@ -32,6 +32,9 @@ $footerSiteBase = htmlspecialchars($footerSiteBase, ENT_QUOTES | ENT_SUBSTITUTE,
       <p><a href="mailto:sangeun@hansulmusic.com">sangeun@hansulmusic.com</a></p>
       <p><a href="<?= $footerSiteBase ?>/index.php" lang="ko">Korean homepage</a></p>
     </div>
-    <p class="site-footer-copyright">Copyright © 2016 HANSUL MUSIC. All rights reserved.</p>
+    <p class="site-footer-copyright">
+      <span>Copyright © 2016 HANSUL MUSIC. All rights reserved.</span>
+      <a class="site-footer-admin-dot" href="<?= $footerSiteBase ?>/admin-products.php" aria-label="Administrator product management">·</a>
+    </p>
   </div>
 </footer>
