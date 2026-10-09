@@ -25,7 +25,10 @@
       message,
     ].join('\n');
     const mailto = new URL('mailto:sangeun@hansulmusic.com');
-    mailto.searchParams.set('subject', `[한설뮤직 의뢰] ${subject}`);
+    const subjectPrefix = document.documentElement.lang.toLowerCase().startsWith('en')
+      ? '[HANSUL MUSIC Commission]'
+      : '[한설뮤직 의뢰]';
+    mailto.searchParams.set('subject', `${subjectPrefix} ${subject}`);
     mailto.searchParams.set('body', body);
     window.location.href = mailto.toString();
   });

@@ -2,6 +2,15 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/site-config.php';
+require_once __DIR__ . '/product-localization.php';
+
+$shopIsEnglish = $shopIsEnglish ?? false;
+$shopBasePath = $shopIsEnglish ? dirname(appBasePath()) : appBasePath();
+if ($shopBasePath === '/' || $shopBasePath === '.') {
+    $shopBasePath = '';
+}
+$shopBasePath = escape($shopBasePath);
+$authFormBasePath = $shopBasePath;
 
 function escape(string $value): string
 {
@@ -11,6 +20,14 @@ function escape(string $value): string
 function productAssetExists(?string $path): bool
 {
     return $path !== null && is_file(__DIR__ . '/' . ltrim($path, '/'));
+}
+
+function shopPageLabel(string $label, bool $isEnglish): string
+{
+    if ($isEnglish && preg_match('/^(\d+)쪽$/u', $label, $matches) === 1) {
+        return 'Page ' . $matches[1];
+    }
+    return $label;
 }
 
 function databaseConnection(): PDO
@@ -39,7 +56,7 @@ $loadError = false;
 try {
     $pdo = databaseConnection();
     $productRows = $pdo->query(
-        'SELECT product_id, product_type, name, subtitle, description,
+        'SELECT product_id, product_type, slug, name, subtitle, description,
                 regular_price_krw, sale_price_krw, cover_path,
                 preview_audio_path, download_path
          FROM products
@@ -49,12 +66,24 @@ try {
 
     foreach ($productRows as $row) {
         $productId = (int) $row['product_id'];
+        $copy = $shopIsEnglish
+            ? englishProductCopy(
+                (string) $row['slug'],
+                (string) $row['name'],
+                (string) $row['subtitle'],
+                (string) $row['description'],
+            )
+            : [
+                'name' => (string) $row['name'],
+                'subtitle' => (string) $row['subtitle'],
+                'description' => (string) $row['description'],
+            ];
         $products[$productId] = [
             'id' => $productId,
             'type' => (int) $row['product_type'],
-            'name' => (string) $row['name'],
-            'subtitle' => (string) $row['subtitle'],
-            'description' => (string) $row['description'],
+            'name' => $copy['name'],
+            'subtitle' => $copy['subtitle'],
+            'description' => $copy['description'],
             'regular_price_krw' => (int) $row['regular_price_krw'],
             'sale_price_krw' => (int) $row['sale_price_krw'],
             'cover' => $row['cover_path'] !== null ? (string) $row['cover_path'] : null,
@@ -89,14 +118,18 @@ try {
 }
 ?>
 <!doctype html>
-<html lang="ko">
+<html lang="<?= $shopIsEnglish ? 'en' : 'ko' ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>악보 · 음원 구매 | HANSUL MUSIC</title>
-  <link rel="stylesheet" href="css/style.css?v=21">
-  <link rel="stylesheet" href="css/register.css?v=6">
-  <meta name="description" content="한설뮤직의 악보와 음원을 미리 확인하고 구매할 수 있습니다.">
+  <title><?= $shopIsEnglish ? 'Scores &amp; Recordings | HANSUL MUSIC' : '악보 · 음원 구매 | HANSUL MUSIC' ?></title>
+  <link rel="stylesheet" href="<?= $shopBasePath ?>/css/style.css?v=34">
+  <link rel="stylesheet" href="<?= $shopBasePath ?>/css/register.css?v=6">
+  <meta name="description" content="<?= $shopIsEnglish ? 'Browse digital scores and recordings from HANSUL MUSIC. USD prices are estimates based on the latest available KRW/USD reference rate.' : '한설뮤직의 악보와 음원을 미리 확인하고 구매할 수 있습니다.' ?>">
+  <link rel="canonical" href="https://www.hansulmusic.com<?= $shopIsEnglish ? '/en/shop.php' : '/shop.php' ?>">
+  <link rel="alternate" hreflang="en" href="https://www.hansulmusic.com/en/shop.php">
+  <link rel="alternate" hreflang="ko" href="https://www.hansulmusic.com/shop.php">
+  <link rel="alternate" hreflang="x-default" href="https://www.hansulmusic.com/shop.php">
   <style>
     :root { --bg:#f7f5f1; --paper:#fff; --card:#fff; --ink:#2a2a28; --soft:#5c5a55; --muted:#8a877f; --line:#e4e0d8; --accent:#a68b5b; --dark:#2c2b29; }
     * { box-sizing:border-box; }
@@ -161,45 +194,41 @@ try {
     @media (max-width:680px) { .wrap{width:calc(100% - 32px)} main{padding:48px 0 72px} .catalog{grid-template-columns:1fr} .cover{height:210px} .score-stage{height:min(110vw,420px);min-height:300px} }
   </style>
 </head>
-<body>
-  <header class="site-header">
-    <a class="logo" href="index.php">HANSUL MUSIC<small>HSM · MUSIC STUDIO</small></a>
-    <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav class="site-nav" id="site-nav">
-      <a href="concert.php">Concert</a>
-      <a href="news.php">News</a>
-      <a href="shop.php" aria-current="page">Scores &amp; Recordings</a>
-      <a href="index.php#contact">Commission</a>
-      <a href="youtube.php">YouTube</a>
-      <a href="hymnal-parts.php">Hymnal (찬송가)</a>
-      <a href="praise-song-parts.php">Praise Song (찬양곡)</a>
-      <div class="nav-account">
-        <button class="signup-nav-button" type="button" data-open-auth>Sign in</button>
-        <button class="nav-member-identity" type="button" data-member-identity hidden disabled></button>
-      </div>
-    </nav>
-  </header>
+<body class="<?= $shopIsEnglish ? 'home-page' : 'site-nav-page' ?>">
+  <?php
+  $headerIsEnglish = $shopIsEnglish;
+  $headerActivePage = 'shop';
+  $headerBasePath = $shopBasePath;
+  require __DIR__ . '/site-header.php';
+  ?>
   <div class="wrap">
     <main>
       <div class="eyebrow">Scores &amp; Recordings</div>
-      <h1>악보와 음원</h1>
-      <div class="purchase-info" aria-label="구매 및 소식 안내">
-        <strong>회원·비회원 모두 구매 가능</strong>
-        <span>신작·이벤트 소식은 수신 동의 회원에게 이메일로 안내합니다.</span>
-      </div>
+      <h1><?= $shopIsEnglish ? 'Scores and recordings' : '악보와 음원' ?></h1>
+      <?php if ($shopIsEnglish): ?>
+        <div class="purchase-info" aria-label="Store and exchange-rate information">
+          <strong>Demo store — no payment is processed</strong>
+          <span>USD prices are estimates converted from KRW. Exchange rates and payment provider fees may change the final amount.</span>
+        </div>
+        <p class="currency-note" data-currency-note>
+          These USD amounts are for reference only. This demo store does not process payments.
+          <span data-currency-status>Loading the latest available exchange rate…</span>
+        </p>
+      <?php else: ?>
+        <div class="purchase-info" aria-label="구매 및 소식 안내">
+          <strong>회원·비회원 모두 구매 가능</strong>
+          <span>신작·이벤트 소식은 수신 동의 회원에게 이메일로 안내합니다.</span>
+        </div>
+      <?php endif; ?>
       <div class="tabs" role="tablist" aria-label="Product type">
         <button class="tab" type="button" role="tab" aria-selected="true" data-filter="1">Scores</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" data-filter="2">Records</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-filter="2"><?= $shopIsEnglish ? 'Recordings' : 'Records' ?></button>
       </div>
-      <section class="catalog" aria-label="상품 목록">
+      <section class="catalog" aria-label="<?= $shopIsEnglish ? 'Product catalog' : '상품 목록' ?>">
         <?php if ($loadError): ?>
-          <p class="concert-error" role="alert">상품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+          <p class="concert-error" role="alert"><?= $shopIsEnglish ? 'Unable to load the product catalog. Please try again later.' : '상품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.' ?></p>
         <?php elseif ($products === []): ?>
-          <p class="concert-empty">현재 진열 중인 상품이 없습니다.</p>
+          <p class="concert-empty"><?= $shopIsEnglish ? 'There are no products available right now.' : '현재 진열 중인 상품이 없습니다.' ?></p>
         <?php endif; ?>
         <?php foreach ($products as $product): ?>
           <?php $isAudio = $product['type'] === 2; ?>
@@ -207,28 +236,29 @@ try {
             <?php if (!$isAudio && !empty($product['preview_images'])): ?>
               <div class="score-viewer" data-score-viewer>
                 <div class="score-stage">
-                  <a class="score-current-link" href="<?= escape($product['preview_images'][0]['path']) ?>" target="_blank" rel="noopener noreferrer" data-score-current-link>
-                    <img class="score-current" src="<?= escape($product['preview_images'][0]['path']) ?>" alt="<?= escape($product['name']) ?> <?= escape($product['preview_images'][0]['label']) ?> 미리보기" data-score-current>
+                  <a class="score-current-link" href="<?= $shopBasePath ?>/<?= escape(ltrim($product['preview_images'][0]['path'], '/')) ?>" target="_blank" rel="noopener noreferrer" data-score-current-link>
+                    <img class="score-current" src="<?= $shopBasePath ?>/<?= escape(ltrim($product['preview_images'][0]['path'], '/')) ?>" alt="<?= escape($product['name']) ?> <?= escape(shopPageLabel($product['preview_images'][0]['label'], $shopIsEnglish)) ?> <?= $shopIsEnglish ? 'preview' : '미리보기' ?>" data-score-current>
                   </a>
                 </div>
                 <div class="score-controls">
-                  <button class="score-nav" type="button" data-score-previous aria-label="이전 악보 페이지">&lsaquo;</button>
-                  <div class="score-thumbnails" role="group" aria-label="악보 페이지 선택">
+                  <button class="score-nav" type="button" data-score-previous aria-label="<?= $shopIsEnglish ? 'Previous score page' : '이전 악보 페이지' ?>">&lsaquo;</button>
+                  <div class="score-thumbnails" role="group" aria-label="<?= $shopIsEnglish ? 'Select a score page' : '악보 페이지 선택' ?>">
                     <?php foreach ($product['preview_images'] as $index => $page): ?>
                       <?php if (productAssetExists($page['path'])): ?>
-                        <button class="score-thumb" type="button" data-score-page data-src="<?= escape($page['path']) ?>" data-alt="<?= escape($product['name']) ?> <?= escape($page['label']) ?> 미리보기" aria-label="<?= escape($page['label']) ?> 보기" aria-pressed="<?= $index === 0 ? 'true' : 'false' ?>">
-                          <img src="<?= escape($page['path']) ?>" alt="" loading="lazy">
+                        <?php $pageLabel = shopPageLabel($page['label'], $shopIsEnglish); ?>
+                        <button class="score-thumb" type="button" data-score-page data-src="<?= $shopBasePath ?>/<?= escape(ltrim($page['path'], '/')) ?>" data-alt="<?= escape($product['name']) ?> <?= escape($pageLabel) ?> <?= $shopIsEnglish ? 'preview' : '미리보기' ?>" aria-label="<?= escape($pageLabel) ?> <?= $shopIsEnglish ? 'view' : '보기' ?>" aria-pressed="<?= $index === 0 ? 'true' : 'false' ?>">
+                          <img src="<?= $shopBasePath ?>/<?= escape(ltrim($page['path'], '/')) ?>" alt="" loading="lazy">
                         </button>
                       <?php endif; ?>
                     <?php endforeach; ?>
                   </div>
-                  <button class="score-nav" type="button" data-score-next aria-label="다음 악보 페이지">&rsaquo;</button>
+                  <button class="score-nav" type="button" data-score-next aria-label="<?= $shopIsEnglish ? 'Next score page' : '다음 악보 페이지' ?>">&rsaquo;</button>
                 </div>
               </div>
             <?php else: ?>
               <div class="cover">
                 <?php if (productAssetExists($product['cover'])): ?>
-                  <img src="<?= escape($product['cover']) ?>" alt="<?= escape($product['name']) ?> 표지">
+                  <img src="<?= $shopBasePath ?>/<?= escape(ltrim($product['cover'], '/')) ?>" alt="<?= escape($product['name']) ?> <?= $shopIsEnglish ? 'cover' : '표지' ?>">
               <?php else: ?>
                 <span class="cover-mark"><?= $isAudio ? '♪' : '𝄞' ?></span>
                 <span class="cover-note"><?= $isAudio ? 'Audio · Preview available' : 'Sheet music · Cover image needed' ?></span>
@@ -241,40 +271,48 @@ try {
             <p class="description"><?= escape($product['description']) ?></p>
             <?php if ($isAudio): ?>
               <?php if (productAssetExists($product['preview'])): ?>
-                <audio controls preload="none" controlsList="nodownload" data-preview-limit="60" src="<?= escape($product['preview']) ?>">브라우저에서 오디오 재생을 지원하지 않습니다.</audio>
-                <p class="preview-limit">미리듣기 1분</p>
+                <audio controls preload="none" controlsList="nodownload" data-preview-limit="60" src="<?= $shopBasePath ?>/<?= escape(ltrim($product['preview'], '/')) ?>"><?= $shopIsEnglish ? 'Your browser does not support audio playback.' : '브라우저에서 오디오 재생을 지원하지 않습니다.' ?></audio>
+                <p class="preview-limit"><?= $shopIsEnglish ? 'One-minute preview' : '미리듣기 1분' ?></p>
               <?php else: ?>
-                <div class="preview-missing">미리듣기 음원 등록 예정</div>
+                <div class="preview-missing"><?= $shopIsEnglish ? 'Audio preview coming soon.' : '미리듣기 음원 등록 예정' ?></div>
               <?php endif; ?>
             <?php endif; ?>
             <div class="purchase">
               <div class="product-prices">
-                <span class="regular-price">정가 <s><?= number_format($product['regular_price_krw']) ?>원</s></span>
-                <span class="sale-price">할인가 <?= number_format($product['sale_price_krw']) ?>원</span>
+                <?php if ($shopIsEnglish): ?>
+                  <span class="regular-price">Regular <s data-krw-price="<?= $product['regular_price_krw'] ?>">Loading USD…</s></span>
+                  <span class="sale-price">Sale <span data-krw-price="<?= $product['sale_price_krw'] ?>">Loading USD…</span></span>
+                <?php else: ?>
+                  <span class="regular-price">정가 <s><?= number_format($product['regular_price_krw']) ?>원</s></span>
+                  <span class="sale-price">할인가 <?= number_format($product['sale_price_krw']) ?>원</span>
+                <?php endif; ?>
               </div>
               <div class="product-actions">
-                <button class="buy" type="button" data-purchase-button>구매하기</button>
+                <button class="buy" type="button" data-purchase-button><?= $shopIsEnglish ? 'Test purchase' : '구매하기' ?></button>
                 <a
                   class="download is-disabled"
-                  href="<?= escape($product['download_file']) ?>"
+                  href="<?= $shopBasePath ?>/<?= escape(ltrim($product['download_file'], '/')) ?>"
                   download
                   aria-disabled="true"
                   tabindex="-1"
-                  data-download-link>다운받기</a>
+                  data-download-link><?= $shopIsEnglish ? 'Download' : '다운받기' ?></a>
               </div>
             </div>
           </article>
         <?php endforeach; ?>
       </section>
-      <p class="notice">구매 후 다운로드되는 파일은 저작권자의 허락 없이 복제하거나 재배포할 수 없습니다.</p>
+      <p class="notice"><?= $shopIsEnglish ? 'Downloaded files may not be copied or redistributed without the copyright holder’s permission.' : '구매 후 다운로드되는 파일은 저작권자의 허락 없이 복제하거나 재배포할 수 없습니다.' ?></p>
     </main>
   </div>
-  <?php require __DIR__ . '/site-footer.php'; ?>
+  <?php
+  $footerLanguage = $shopIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/site-footer.php';
+  ?>
 
   <dialog class="purchase-dialog" aria-labelledby="purchase-dialog-title" aria-describedby="purchase-dialog-message" data-purchase-dialog>
-    <h2 id="purchase-dialog-title">구매해 주셔서 감사합니다</h2>
-    <p id="purchase-dialog-message">테스트 구매가 완료되었습니다. 실제 결제는 진행되지 않았으며, 구매한 상품을 다운로드할 수 있습니다.</p>
-    <button type="button" data-close-purchase-dialog>확인</button>
+    <h2 id="purchase-dialog-title"><?= $shopIsEnglish ? 'Demo purchase complete' : '구매해 주셔서 감사합니다' ?></h2>
+    <p id="purchase-dialog-message"><?= $shopIsEnglish ? 'No payment was processed. This is a test flow, and the preview file can now be downloaded.' : '테스트 구매가 완료되었습니다. 실제 결제는 진행되지 않았으며, 구매한 상품을 다운로드할 수 있습니다.' ?></p>
+    <button type="button" data-close-purchase-dialog><?= $shopIsEnglish ? 'Continue' : '확인' ?></button>
   </dialog>
   <script>
     document.querySelectorAll('[data-score-viewer]').forEach((viewer) => {
@@ -350,7 +388,10 @@ try {
       button.addEventListener('click', () => {
         const product = button.closest('.product');
         if (!(purchaseDialog instanceof HTMLDialogElement) || !(product instanceof HTMLElement)) {
-          throw new Error('구매 완료 안내를 열 수 없습니다.');
+          throw new Error(<?= json_encode(
+              $shopIsEnglish ? 'Unable to open the demo purchase message.' : '구매 완료 안내를 열 수 없습니다.',
+              JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT,
+          ) ?>);
         }
         completedProduct = product;
         purchaseDialog.showModal();
@@ -367,7 +408,10 @@ try {
         downloadLink.removeAttribute('tabindex');
       }
       if (purchaseButton instanceof HTMLButtonElement) {
-        purchaseButton.textContent = '구매 완료';
+        purchaseButton.textContent = <?= json_encode(
+            $shopIsEnglish ? 'Demo complete' : '구매 완료',
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT,
+        ) ?>;
         purchaseButton.disabled = true;
       }
       completedProduct = null;
@@ -380,8 +424,14 @@ try {
 
     purchaseDialog?.addEventListener('close', enableCompletedDownload);
   </script>
-  <?php require __DIR__ . '/auth-modal.php'; ?>
-  <script src="js/signup-modal.js?v=11" defer></script>
-  <script src="js/navigation.js?v=2" defer></script>
+  <?php
+  $authLanguage = $shopIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/auth-modal.php';
+  ?>
+  <?php if ($shopIsEnglish): ?>
+    <script src="<?= $shopBasePath ?>/js/currency-estimate.js?v=1" defer></script>
+  <?php endif; ?>
+  <script src="<?= $shopBasePath ?>/js/signup-modal.js?v=13" defer></script>
+  <script src="<?= $shopBasePath ?>/js/navigation.js?v=2" defer></script>
 </body>
 </html>

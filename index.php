@@ -168,41 +168,58 @@ try {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HANSUL MUSIC | 작곡 · 관현악편곡 · 편곡 · 악보 · 레슨</title>
-<meta name="description" content="한설뮤직 — 작곡, 관현악편곡, 성가곡·일반곡 편곡, 악보 및 음원 제작, 작곡 입시 레슨">
-<link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=28">
+<title>Composition &amp; Arrangement | 작곡·편곡·관현악편곡 | HANSUL MUSIC</title>
+<meta name="description" content="한설뮤직은 작곡가 한상은의 작곡, 관현악편곡, 합창·기악 편곡, 악보·음원 제작 및 작곡 레슨을 제공합니다.">
+<link rel="canonical" href="https://www.hansulmusic.com/">
+<link rel="alternate" hreflang="ko" href="https://www.hansulmusic.com/">
+<link rel="alternate" hreflang="en" href="https://www.hansulmusic.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://www.hansulmusic.com/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="한설뮤직 HANSUL MUSIC">
+<meta property="og:title" content="Composition &amp; Arrangement | 작곡·편곡·관현악편곡 | HANSUL MUSIC">
+<meta property="og:description" content="작곡가 한상은의 작곡, 관현악편곡, 합창·기악 편곡, 악보·음원 제작 및 작곡 레슨.">
+<meta property="og:url" content="https://www.hansulmusic.com/">
+<meta property="og:image" content="https://www.hansulmusic.com/images/sehan.jpg">
+<meta property="og:image:alt" content="작곡가 한상은">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Composition &amp; Arrangement | 작곡·편곡·관현악편곡 | HANSUL MUSIC">
+<meta name="twitter:description" content="작곡가 한상은의 작곡, 관현악편곡, 합창·기악 편곡, 악보·음원 제작 및 작곡 레슨.">
+<meta name="twitter:image" content="https://www.hansulmusic.com/images/sehan.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "한설뮤직",
+  "alternateName": "HANSUL MUSIC",
+  "url": "https://www.hansulmusic.com/",
+  "description": "작곡가 한상은의 작곡, 관현악편곡, 합창·기악 편곡, 악보·음원 제작 및 작곡 레슨.",
+  "founder": {
+    "@type": "Person",
+    "name": "한상은",
+    "alternateName": "Sangeun Han"
+  },
+  "sameAs": [
+    "https://www.youtube.com/channel/UC3TyN3LI9tszetiNJeGegyg"
+  ]
+}
+</script>
+<link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=34">
 <link rel="stylesheet" href="<?= $basePath ?>/css/register.css?v=6">
 </head>
-<body>
+<body class="home-page">
 <div class="wrap">
-  <header class="site-header">
-    <a class="logo" href="<?= $basePath ?>/index.php">HANSUL MUSIC<small>HSM · MUSIC STUDIO</small></a>
-    <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav class="site-nav" id="site-nav">
-      <a href="<?= $basePath ?>/concert.php">Concert</a>
-      <a href="<?= $basePath ?>/news.php">News</a>
-      <a href="<?= $basePath ?>/shop.php">Scores &amp; Recordings</a>
-      <a href="<?= $basePath ?>/index.php#contact">Commission</a>
-      <a href="<?= $basePath ?>/youtube.php">YouTube</a>
-      <a href="<?= $basePath ?>/hymnal-parts.php">Hymnal (찬송가)</a>
-      <a href="<?= $basePath ?>/praise-song-parts.php">Praise Song (찬양곡)</a>
-      <div class="nav-account">
-        <button class="signup-nav-button" type="button" data-open-auth>Sign in</button>
-        <button class="nav-member-identity" type="button" data-member-identity hidden disabled></button>
-      </div>
-    </nav>
-  </header>
+  <?php
+  $headerActivePage = 'home';
+  require __DIR__ . '/site-header.php';
+  ?>
 
   <main>
     <!-- Hero -->
     <section class="hero">
       <div>
         <div class="eyebrow">Composition, orchestration, arrangement,<br>scoring, and private lessons</div>
-        <h1>음악을<br>완성하는 일.</h1>
+        <h1>작곡과 편곡으로<br>음악을 완성합니다.</h1>
         <p class="hero-services">작곡, 관현악편곡, 성가곡/일반곡 편곡, 악보 및 음원 제작, 작곡입시레슨</p>
         <p class="lead">한설뮤직은 작곡가 한상은을 중심으로 작곡, 관현악편곡, 합창·기악 편곡, 악보·음원 제작과 전문 음악 레슨을 제공합니다.</p>
         <div class="buttons">
@@ -435,50 +452,10 @@ try {
     </div>
 
     <div class="commission-bottom">
-      <section class="commission-payment" aria-labelledby="commission-payment-title">
-        <h3 id="commission-payment-title">결제 안내 <span>Payment</span></h3>
-        <div class="commission-paypal">
-          <strong>페이팔 (PAYPAL)</strong>
-          <p>페이팔(PayPal)에 가입하시면 안전한 결제를 하실 수 있습니다.</p>
-          <p lang="en">You can make secure payments by signing up for PayPal.</p>
-          <a href="https://www.paypal.com/kr/home" target="_blank" rel="noopener noreferrer">PayPal 가입 및 결제 ↗</a>
-        </div>
-        <h4 class="commission-bank-heading">계좌이체 <span>Bank Transfer</span></h4>
-        <p class="commission-bank-intro">계좌이체(Bank Transfer)를 원하실 때는 아래 순서로 진행하시면 됩니다.</p>
-        <p class="commission-bank-intro" lang="en">If you prefer to pay via bank transfer, please follow the steps below.</p>
-        <ol>
-          <li>
-            <span>입력 내용을 확인한 후 주문합니다.</span>
-            <span lang="en">After confirming your input, place an order.</span>
-          </li>
-          <li>
-            <span>주문 후 안내된 입금 계좌로 현금을 이체합니다.</span>
-            <span lang="en">After placing your order, transfer the payment to the provided deposit account.</span>
-          </li>
-          <li>
-            <span>한설뮤직에서 입금을 확인한 후 구매자의 이메일로 상품을 보내드리거나 작업을 시작합니다.</span>
-            <span lang="en">After confirming the payment, Hansul Music will send the product to the buyer's email or begin the work.</span>
-          </li>
-        </ol>
-        <div class="commission-bank-details">
-          <h4>주문 계좌 <span>Bank Account Information</span></h4>
-          <dl>
-            <div><dt>구매안전서비스 · SWIFT CODE</dt><dd>CZNBKRSEXXX</dd></div>
-            <div><dt>은행명 · Bank Name</dt><dd>KB 국민은행 (KOOKMIN BANK OF KOREA)</dd></div>
-            <div><dt>계좌번호 · Account No.</dt><dd>73950100069238</dd></div>
-            <div><dt>예금주 · Account Holder</dt><dd>한상은 (한설뮤직 HANSUL MUSIC)</dd></div>
-          </dl>
-        </div>
-        <div class="commission-rate">
-          <strong>참고 환율 <span>USD / KRW</span></strong>
-          <output data-usd-krw-rate aria-live="polite">환율 정보를 불러오는 중...</output>
-          <small data-usd-krw-updated></small>
-          <a href="https://www.exchangerate-api.com/" target="_blank" rel="noopener noreferrer">환율 정보 제공: ExchangeRate-API</a>
-        </div>
-      </section>
       <div class="commission-contact">
-        <h3>의뢰 및 문의</h3>
-        <p>의뢰 내용을 남겨주시면 입력하신 메일 앱에서 문의 메일을 작성할 수 있습니다.</p>
+        <h3>작곡·편곡 의뢰 및 문의 <span>Composition &amp; Arrangement Inquiries</span></h3>
+        <p>작곡·편곡 비용은 마디 수, 악기 편성, 난이도와 납기 등에 따라 달라집니다. 먼저 의뢰 내용을 확인한 뒤 작업 범위와 견적, 일정을 협의하고 결제 방법을 안내해 드립니다.</p>
+        <p lang="en">Fees depend on the length, instrumentation, difficulty, and deadline. We will confirm the scope, quote, and schedule before sending payment instructions.</p>
         <form class="commission-form" data-commission-form>
           <div class="field">
             <label for="commission-name">이름 Name *</label>
@@ -504,33 +481,41 @@ try {
           <p class="commission-form-note" role="status" aria-live="polite">제출하면 기본 메일 앱이 열립니다. 메일 앱에서 내용을 확인한 뒤 전송해 주세요.</p>
         </form>
         <a class="commission-email" href="mailto:sangeun@hansulmusic.com">sangeun@hansulmusic.com</a>
+        <section class="commission-payment" aria-labelledby="commission-payment-title">
+          <h4 id="commission-payment-title" class="commission-bank-heading">결제 안내 <span>Payment</span></h4>
+          <p class="commission-bank-intro">이 안내는 작곡·편곡 맞춤 의뢰에 적용되며, 악보·음원 등 일반 상품 결제와는 별도입니다.</p>
+          <ol>
+            <li>
+              <span>국내 의뢰: 견적과 작업 범위를 확정한 뒤 아래 계좌로 이체해 주세요. 결제 시기와 금액은 견적 안내 시 함께 확인합니다.</span>
+              <span lang="en">For commissions in Korea, transfer payment to the account below after confirming the quote and scope. Payment timing and amount will be provided with the quote.</span>
+            </li>
+            <li>
+              <span>해외 의뢰: 견적 확정 후 PayPal 청구서(Invoice)를 이메일로 보내드립니다. PayPal 홈페이지에서 먼저 가입하거나 바로 결제하실 필요는 없습니다.</span>
+              <span lang="en">For international commissions, we will email a PayPal invoice after confirming the quote. There is no need to sign up or pay through the PayPal homepage first.</span>
+            </li>
+            <li>
+              <span>결제가 확인되면 협의한 일정에 따라 작업을 시작합니다.</span>
+              <span lang="en">Work will begin according to the agreed schedule once payment is confirmed.</span>
+            </li>
+          </ol>
+          <div class="commission-bank-details">
+            <h4>국내 의뢰 계좌이체 <span>Bank Transfer in Korea</span></h4>
+            <dl>
+              <div><dt>은행명 · Bank Name</dt><dd>KB 국민은행 (KOOKMIN BANK OF KOREA)</dd></div>
+              <div><dt>계좌번호 · Account No.</dt><dd>73950100069238</dd></div>
+              <div><dt>예금주 · Account Holder</dt><dd>한상은 (한설뮤직 HANSUL MUSIC)</dd></div>
+            </dl>
+          </div>
+        </section>
       </div>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="wrap site-footer-inner">
-    <div class="site-footer-brand">
-      <a href="https://www.hansulmusic.com/" aria-label="HANSUL MUSIC 홈">
-        <img src="https://static.wixstatic.com/media/d49565_b4834284a8f1429e84ca2524a187b9e0.png/v1/fill/w_72,h_41,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/d49565_b4834284a8f1429e84ca2524a187b9e0.png" alt="HANSUL MUSIC (HSM)" width="72" height="41" loading="lazy">
-      </a>
-      <span class="site-footer-president">한설뮤직 대표: 한상은<br>(SANGEUN HAN, President)</span>
-    </div>
-    <div class="site-footer-social">
-      <a class="site-footer-youtube" href="https://www.youtube.com/channel/UC3TyN3LI9tszetiNJeGegyg/videos?view=0&amp;sort=p&amp;flow=grid" target="_blank" rel="noopener noreferrer" aria-label="한설뮤직 YouTube 채널">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg>
-        <span>한설뮤직 YouTube 채널</span>
-      </a>
-    </div>
-    <div class="site-footer-meta">
-      <p>사업자등록번호: 271-46-00745 (Corporate Registration No.)</p>
-      <p>통신판매신고업 신고번호: 2025-인천연수구- 2420</p>
-      <p>주소: 인천, 연수구 앵고개로 262, 8069호 (오피스밸리)</p>
-    </div>
-    <p class="site-footer-copyright">Copyright(c)2016 by HANSUL MUSIC. All rights reserved.</p>
-  </div>
-</footer>
+<?php
+$footerLanguage = 'ko';
+require __DIR__ . '/site-footer.php';
+?>
 
 <dialog class="signup-modal" aria-labelledby="auth-title">
   <section class="register-card">
@@ -593,10 +578,9 @@ try {
     <div class="concert-player-frame"></div>
   </div>
 </dialog>
-<script src="<?= $basePath ?>/js/signup-modal.js?v=11" defer></script>
+<script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
 <script src="<?= $basePath ?>/js/navigation.js?v=2" defer></script>
 <script src="<?= $basePath ?>/js/concert.js?v=7" defer></script>
-<script src="<?= $basePath ?>/js/commission-rates.js?v=1" defer></script>
 <script src="<?= $basePath ?>/js/commission-inquiry.js?v=1" defer></script>
 </body>
 </html>

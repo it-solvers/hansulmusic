@@ -17,31 +17,14 @@ $basePath = escape(appBasePath());
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>작곡가 한상은 프로필 | HANSUL MUSIC</title>
   <meta name="description" content="작곡가 한상은의 수상 및 국내외 작품 발표 경력입니다.">
-  <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=21">
+  <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=34">
   <link rel="stylesheet" href="<?= $basePath ?>/css/register.css?v=6">
 </head>
-<body>
-  <header>
-    <a class="logo" href="<?= $basePath ?>/index.php">HANSUL MUSIC<small>HSM · MUSIC STUDIO</small></a>
-    <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav class="site-nav" id="site-nav">
-      <a href="<?= $basePath ?>/concert.php">Concert</a>
-      <a href="<?= $basePath ?>/news.php">News</a>
-      <a href="<?= $basePath ?>/shop.php">Scores &amp; Recordings</a>
-      <a href="<?= $basePath ?>/index.php#contact">Commission</a>
-      <a href="<?= $basePath ?>/youtube.php">YouTube</a>
-      <a href="<?= $basePath ?>/hymnal-parts.php">Hymnal (찬송가)</a>
-      <a href="<?= $basePath ?>/praise-song-parts.php">Praise Song (찬양곡)</a>
-      <div class="nav-account">
-        <button class="signup-nav-button" type="button" data-open-auth>Sign in</button>
-        <button class="nav-member-identity" type="button" data-member-identity hidden disabled></button>
-      </div>
-    </nav>
-  </header>
+<body class="site-nav-page">
+  <?php
+  $headerActivePage = 'composer';
+  require __DIR__ . '/site-header.php';
+  ?>
 
   <main class="composer-page">
     <div class="wrap">
@@ -124,7 +107,7 @@ $basePath = escape(appBasePath());
 
   <?php require __DIR__ . '/site-footer.php'; ?>
   <?php require __DIR__ . '/auth-modal.php'; ?>
-  <script src="<?= $basePath ?>/js/signup-modal.js?v=11" defer></script>
+  <script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
   <script src="<?= $basePath ?>/js/navigation.js?v=2" defer></script>
 </body>
 </html>

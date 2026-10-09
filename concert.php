@@ -105,31 +105,14 @@ try {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Concert videos by Dr. Sangeun Han | Hansul Music</title>
   <meta name="description" content="The compositions and concert videos of Dr. Sangeun Han.">
-  <link rel="stylesheet" href="<?= escape($basePath) ?>/css/style.css?v=21">
+  <link rel="stylesheet" href="<?= escape($basePath) ?>/css/style.css?v=34">
   <link rel="stylesheet" href="<?= escape($basePath) ?>/css/register.css?v=6">
 </head>
-<body>
-  <header>
-    <a class="logo" href="<?= escape($basePath) ?>/index.php">HANSUL MUSIC<small>HSM · MUSIC STUDIO</small></a>
-    <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav class="site-nav" id="site-nav">
-      <a href="concert.php" aria-current="page">Concert</a>
-      <a href="news.php">News</a>
-      <a href="shop.php">Scores &amp; Recordings</a>
-      <a href="<?= escape($basePath) ?>/index.php#contact">Commission</a>
-      <a href="youtube.php">YouTube</a>
-      <a href="hymnal-parts.php">Hymnal (찬송가)</a>
-      <a href="praise-song-parts.php">Praise Song (찬양곡)</a>
-      <div class="nav-account">
-        <button class="signup-nav-button" type="button" data-open-auth>Sign in</button>
-        <button class="nav-member-identity" type="button" data-member-identity hidden disabled></button>
-      </div>
-    </nav>
-  </header>
+<body class="site-nav-page">
+  <?php
+  $headerActivePage = 'concert';
+  require __DIR__ . '/site-header.php';
+  ?>
 
   <main class="concert-page">
     <div class="wrap">
@@ -184,7 +167,7 @@ try {
   </dialog>
 
   <?php require __DIR__ . '/auth-modal.php'; ?>
-  <script src="<?= escape($basePath) ?>/js/signup-modal.js?v=11" defer></script>
+  <script src="<?= escape($basePath) ?>/js/signup-modal.js?v=13" defer></script>
   <script src="<?= escape($basePath) ?>/js/navigation.js" defer></script>
   <script src="<?= escape($basePath) ?>/js/concert.js?v=6" defer></script>
 </body>
