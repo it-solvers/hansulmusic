@@ -1,8 +1,11 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 공통 경로 설정을 불러오고 뉴스 페이지 출력 데이터를 준비합니다.
 require_once __DIR__ . '/site-config.php';
 
+// [2단계] 템플릿에 출력하는 문자열을 안전하게 이스케이프합니다.
+/** 뉴스 페이지에 출력할 문자열의 HTML 특수 문자를 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -23,9 +26,12 @@ $basePath = escape(appBasePath());
 <body class="site-nav-page">
   <?php
   $headerActivePage = 'news';
-  require __DIR__ . '/site-header.php';
+  $headerIsEnglish = ($_GET['lang'] ?? '') === 'en';
+  // [3단계] lang 값에 따라 탐색 메뉴만 언어별 파일로 선택합니다.
+  require __DIR__ . ($headerIsEnglish ? '/en/site-header.php' : '/site-header-ko.php');
   ?>
 
+  <!-- [1단계] 공지·교육 안내와 음악 작품을 주제별 카드로 소개합니다. -->
   <main class="news-page">
     <div class="wrap">
       <section class="news-heading">
@@ -36,6 +42,7 @@ $basePath = escape(appBasePath());
       </section>
 
       <section class="news-section" aria-labelledby="news-updates-title">
+        <!-- [2단계] 출간 안내와 작곡 레슨 정보를 카드로 묶습니다. -->
         <div class="news-section-heading">
           <div>
             <div class="section-label">Announcements &amp; Education</div>
@@ -51,6 +58,7 @@ $basePath = escape(appBasePath());
             <p>제목 : 관현악법의 역사</p>
             <p lang="en">Title : The History of Orchestration</p>
             <div class="news-book-carousel" data-book-carousel aria-label="관현악법의 역사 책 표지">
+              <!-- [3단계] 표지 경로 배열은 캐러셀 스크립트가 읽도록 JSON 속성으로 전달합니다. -->
               <img
                 class="news-book-image"
                 src="<?= $basePath ?>/images/관현악법의역사1.png"
@@ -84,6 +92,7 @@ $basePath = escape(appBasePath());
       </section>
 
       <section class="news-section" aria-labelledby="news-works-title">
+        <!-- [2단계] 편곡·성악·현대음악 작품을 장르별 목록으로 나눕니다. -->
         <div class="news-section-heading">
           <div>
             <div class="section-label">Music Catalogue</div>
@@ -140,7 +149,10 @@ $basePath = escape(appBasePath());
     </div>
   </main>
 
-  <?php require __DIR__ . '/site-footer.php'; ?>
+  <?php
+  $footerLanguage = $headerIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/site-footer.php';
+  ?>
 
   <dialog class="concert-player" aria-label="YouTube 영상 플레이어">
     <div class="concert-player-content">
@@ -151,7 +163,7 @@ $basePath = escape(appBasePath());
 
   <?php require __DIR__ . '/auth-modal.php'; ?>
   <script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
-  <script src="<?= $basePath ?>/js/navigation.js" defer></script>
+  <script src="<?= $basePath ?>/js/navigation.js?v=3" defer></script>
   <script src="<?= $basePath ?>/js/news.js" defer></script>
   <script src="<?= $basePath ?>/js/concert.js?v=6" defer></script>
 </body>

@@ -1,19 +1,26 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 찬송가 파트 연습 페이지의 공통 설정과 카탈로그 처리를 준비합니다.
 require_once __DIR__ . '/site-config.php';
 
+// [2단계] 출력 값의 HTML 특수 문자를 이스케이프합니다.
+/** 찬송가 화면에 출력할 문자열의 HTML 특수 문자를 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// [2단계] 추가 파트 링크 JSON을 페이지에서 사용할 파트-주소 배열로 변환합니다.
+/** 추가 파트 링크 JSON을 파트명을 키로 하는 URL 배열로 변환합니다. */
 function decodeAdditionalPartLinks(?string $value): array
 {
+    // [3단계] 추가 링크가 비어 있으면 기본 파트 링크만 사용합니다.
     if ($value === null || $value === '') {
         return [];
     }
 
+    // [3단계] JSON 구조가 예상한 파트명·URL 문자열 쌍인지 검증합니다.
     $items = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($items)) {
         throw new UnexpectedValueException('Invalid additional hymnal part links.');
@@ -34,6 +41,8 @@ function decodeAdditionalPartLinks(?string $value): array
     return $links;
 }
 
+// [2단계] 데이터베이스 환경 변수를 확인한 뒤 PDO 연결을 생성합니다.
+/** 필수 DB 환경 변수를 검증하고 찬송가 카탈로그용 PDO 연결을 반환합니다. */
 function databaseConnection(): PDO
 {
     $user = getenv('DB_USER');
@@ -55,10 +64,13 @@ function databaseConnection(): PDO
     );
 }
 
+// [1단계] 활성 찬송가 자료를 조회하고 카탈로그 분류와 함께 화면에 전달합니다.
 $basePath = appBasePath();
 $hymns = [];
 $loadError = false;
 try {
+    // [3단계] hymnal에서 활성 찬송가(catalog_type 1)를 분류·순서대로 가져와 $hymns에 저장합니다.
+    // 아래 찬송가 목록 반복문이 제목·번호·파트별 영상 링크를 각 카드로 출력합니다.
     $statement = databaseConnection()->query(
         'SELECT hymnal_id, hymnal_type, hymn_number, hymn_title,
                 video_url, soprano_url, alto_url, tenor_url, bass_url, chorus_url,
@@ -70,6 +82,7 @@ try {
     );
     $hymns = $statement->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException | RuntimeException $exception) {
+    // [3단계] 조회 실패 시 서버 오류 상태와 페이지용 오류 플래그를 설정합니다.
     error_log('Hymnal catalog database error: ' . $exception->getMessage());
     http_response_code(503);
     $loadError = true;
@@ -95,9 +108,12 @@ $tabs = [
 <body class="site-nav-page">
   <?php
   $headerActivePage = 'hymnal';
-  require __DIR__ . '/site-header.php';
+  $headerIsEnglish = ($_GET['lang'] ?? '') === 'en';
+  // [3단계] 언어 쿼리 값에 따라 공통 탐색 메뉴 파일을 선택합니다.
+  require __DIR__ . ($headerIsEnglish ? '/en/site-header.php' : '/site-header-ko.php');
   ?>
 
+  <!-- [1단계] 찬송가 종류 탭과 검색·정렬·페이지 이동 영역을 출력합니다. -->
   <main class="hymnal-page">
     <div class="wrap">
       <section class="hymnal-heading">
@@ -139,9 +155,11 @@ $tabs = [
             </div>
           </div>
           <div class="hymnal-list" data-hymnal-list>
+            <!-- [3단계] $hymns의 각 DB 행을 찬송가 카드의 제목·번호·파트별 링크로 출력합니다. -->
             <?php foreach ($hymns as $hymn): ?>
               <?php
                 $type = (int) $hymn['hymnal_type'];
+                // [2단계] 기본 파트 링크와 JSON으로 등록된 추가 링크를 하나로 합칩니다.
                 $partLinks = [
                     'S' => $hymn['soprano_url'],
                     'A' => $hymn['alto_url'],
@@ -177,6 +195,7 @@ $tabs = [
                   <h2><?= escape((string) $hymn['hymn_title']) ?></h2>
                 </div>
                 <div class="hymnal-links" aria-label="연습 영상">
+                  <!-- [3단계] 파트 링크가 있으면 우선 표시하고, 없을 때 기본 영상 또는 준비 중 상태를 표시합니다. -->
                   <?php if ($hasPartLinks): ?>
                     <?php foreach ($partLinks as $part => $url): ?>
                       <?php if (is_string($url) && $url !== ''): ?>
@@ -203,7 +222,10 @@ $tabs = [
     </div>
   </main>
 
-  <?php require __DIR__ . '/site-footer.php'; ?>
+  <?php
+  $footerLanguage = $headerIsEnglish ? 'en' : 'ko';
+  require __DIR__ . '/site-footer.php';
+  ?>
 
   <dialog class="concert-player" aria-label="찬송가 영상 플레이어">
     <div class="concert-player-content">
@@ -214,7 +236,7 @@ $tabs = [
 
   <?php require __DIR__ . '/auth-modal.php'; ?>
   <script src="<?= escape($basePath) ?>/js/signup-modal.js?v=13" defer></script>
-  <script src="<?= escape($basePath) ?>/js/navigation.js?v=2" defer></script>
+  <script src="<?= escape($basePath) ?>/js/navigation.js?v=3" defer></script>
   <script src="<?= escape($basePath) ?>/js/concert.js?v=6" defer></script>
   <script src="<?= escape($basePath) ?>/js/hymnal-parts.js?v=5" defer></script>
 </body>

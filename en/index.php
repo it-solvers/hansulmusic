@@ -1,14 +1,19 @@
 <?php
 declare(strict_types=1);
 
+// [1단계] 영문 홈페이지에 필요한 공통 설정과 동적 콘텐츠를 준비합니다.
 require_once __DIR__ . '/../site-config.php';
 require_once __DIR__ . '/../product-localization.php';
 
+// [2단계] 템플릿에 출력하는 문자열을 안전하게 이스케이프합니다.
+/** 영문 홈페이지 콘텐츠를 HTML에 안전하게 출력하도록 이스케이프합니다. */
 function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// [2단계] 영문 홈페이지 콘텐츠 조회용 DB 연결을 생성합니다.
+/** 영문 홈페이지 콘텐츠 조회에 사용할 PDO 연결을 반환합니다. */
 function englishHomeDatabaseConnection(): PDO
 {
     $user = getenv('DB_USER');
@@ -30,9 +35,12 @@ function englishHomeDatabaseConnection(): PDO
     );
 }
 
+// [2단계] 지원하는 YouTube 주소에서 영상 ID를 추출합니다.
+/** 허용된 HTTPS YouTube 주소에서 유효한 영상 ID를 추출하고, 아니면 null을 반환합니다. */
 function englishHomeYouTubeVideoId(string $url): ?string
 {
     $parts = parse_url($url);
+    // [3단계] HTTPS 주소와 호스트가 확인되지 않으면 허용하지 않습니다.
     if ($parts === false
         || strtolower($parts['scheme'] ?? '') !== 'https'
         || !isset($parts['host'])) {
@@ -56,9 +64,11 @@ function englishHomeYouTubeVideoId(string $url): ?string
         return null;
     }
 
+    // [3단계] 추출 결과가 YouTube 영상 ID 형식과 일치하는지 검증합니다.
     return preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId) === 1 ? $videoId : null;
 }
 
+// [1단계] 영문 URL 경로와 홈페이지 표시용 영상·상품 데이터를 준비합니다.
 $basePath = dirname(appBasePath());
 if ($basePath === '/' || $basePath === '.') {
     $basePath = '';
@@ -73,7 +83,9 @@ $homeScoreProducts = [];
 $homeAudioProducts = [];
 $homeProductsError = false;
 try {
+    // [2단계] 작곡 영상 하나와 중복 없는 공연 영상 목록을 구성합니다.
     $pdo = englishHomeDatabaseConnection();
+    // [3단계] videos에서 활성 작곡 영상을 읽고, 아래 대표 영상 영역에 쓸 ID·제목만 보관합니다.
     $statement = $pdo->query(
         'SELECT video_title, video_url
          FROM videos
@@ -83,6 +95,7 @@ try {
     foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $videoId = englishHomeYouTubeVideoId((string) $row['video_url']);
         if ($videoId === null) {
+            // [3단계] 잘못된 영상 주소는 제외하고 서버 로그에 기록합니다.
             error_log('English homepage composition video row contains an invalid YouTube URL.');
             continue;
         }
@@ -95,6 +108,8 @@ try {
         $homeVideo = $compositionVideos[random_int(0, count($compositionVideos) - 1)];
     }
 
+    // [2단계] videos에서 활성 공연 영상을 조회해 중복 제거 후 무작위로 최대 세 개만 노출합니다.
+    // [3단계] 가공한 $homeConcertVideos는 아래 Concert 카드 반복문에서 제목과 썸네일로 표시합니다.
     $statement = $pdo->query(
         'SELECT video_title, video_url
          FROM videos
@@ -107,6 +122,7 @@ try {
             error_log('English homepage concert video row contains an invalid YouTube URL.');
             continue;
         }
+        // [3단계] 같은 영상이 중복 등록된 경우 첫 항목만 유지합니다.
         if (isset($concertVideoIds[$videoId])) {
             continue;
         }
@@ -124,7 +140,10 @@ try {
     $homeConcertError = true;
 }
 
+// [2단계] 상품 문구를 영문화하고 종류별로 나누어 미리보기 목록을 구성합니다.
 try {
+    // [3단계] products에서 활성 악보·음원과 가격을, product_assets에서 첫 미리보기 경로를 가져옵니다.
+    // 결과는 아래 Scores와 Recordings 영역의 카드에 표시합니다.
     $productRows = englishHomeDatabaseConnection()->query(
         'SELECT product_id, product_type, slug, name, subtitle, regular_price_krw, sale_price_krw,
                 cover_path,
@@ -139,6 +158,7 @@ try {
 
     foreach ($productRows as $row) {
         $imagePath = $row['preview_image'] ?: $row['cover_path'];
+        // [3단계] 미리보기와 표지 경로가 모두 유효하지 않으면 이미지 없이 표시합니다.
         if ($imagePath !== null
             && (!is_string($imagePath) || !is_file(__DIR__ . '/../' . ltrim($imagePath, '/')))) {
             $imagePath = null;
@@ -246,10 +266,11 @@ try {
     <?php
     $headerIsEnglish = true;
     $headerActivePage = 'home';
-    require __DIR__ . '/../site-header.php';
+    require __DIR__ . '/site-header.php';
     ?>
 
     <main>
+      <!-- [1단계] 영문 홈페이지의 소개와 서비스·작품·상품 정보를 구성합니다. -->
       <section class="hero">
         <div>
           <div class="eyebrow">Composition, orchestration, arrangement,<br>scoring, and private lessons</div>
@@ -261,6 +282,8 @@ try {
             <a class="btn ghost" href="#services">Explore Services</a>
           </div>
         </div>
+        <!-- [3단계] 대표 영상이 없을 때는 조회 오류와 미등록 상태를 나누어 안내합니다. -->
+        <!-- [3단계] DB에서 고른 대표 작곡 영상은 이 영역에 썸네일·제목으로 표시합니다. -->
         <?php if ($homeVideo !== null): ?>
           <?php $homeVideoTitle = $homeVideo['title'] !== '' ? $homeVideo['title'] : 'Composition'; ?>
           <article class="concert-video">
@@ -340,8 +363,10 @@ try {
     <div class="wrap">
       <div class="section-label">Concert</div>
       <h2>Watch performances of selected works.</h2>
+      <!-- [3단계] 공연 영상의 오류와 정상적인 빈 목록을 구분해 안내합니다. -->
       <?php if ($homeConcertVideos !== []): ?>
         <div class="work-grid">
+          <!-- [3단계] 조회·검증된 공연 영상만 카드와 재생 버튼으로 표시합니다. -->
           <?php foreach ($homeConcertVideos as $index => $video): ?>
             <?php $concertTitle = $video['title'] !== '' ? $video['title'] : 'Concert Video ' . ($index + 1); ?>
             <article class="work-card">
@@ -375,14 +400,15 @@ try {
       </div>
       <?php if (!$homeProductsError && ($homeScoreProducts !== [] || $homeAudioProducts !== [])): ?>
         <p class="currency-note" data-currency-note>
-          USD prices are estimates converted from KRW using a reference exchange rate and may change with market rates or payment provider fees.
-          The English store is currently a demo and does not process payments.
+          USD prices are estimates converted from KRW. Orders are requested by email, paid by PayPal invoice, and delivered by email after payment is confirmed. Visit the store for the order steps and estimated PayPal fees.
           <span data-currency-status>Loading the latest available exchange rate…</span>
         </p>
       <?php endif; ?>
+      <!-- [3단계] 상품 조회 실패와 정상적인 상품 미등록 상태를 구분해 안내합니다. -->
       <?php if ($homeProductsError): ?>
         <p class="hero-video-error" role="status">Unable to load products. <a href="<?= $basePath ?>/en/shop.php">Visit the store.</a></p>
       <?php else: ?>
+        <!-- [3단계] 조회 결과를 악보·음원 그룹별 카드로 출력합니다. -->
         <?php foreach ([
             ['title' => 'Scores', 'label' => 'Scores', 'products' => $homeScoreProducts, 'mark' => '𝄞'],
             ['title' => 'Recordings', 'label' => 'Recordings', 'products' => $homeAudioProducts, 'mark' => '♪'],
@@ -400,6 +426,7 @@ try {
                       <?php if ($product['image'] !== null): ?>
                         <img src="<?= $basePath ?>/<?= escape(ltrim($product['image'], '/')) ?>" alt="" loading="lazy" decoding="async">
                       <?php else: ?>
+                        <!-- [3단계] 이미지가 없는 상품은 종류에 맞는 기호로 대신 표시합니다. -->
                         <span aria-hidden="true"><?= $productGroup['mark'] ?></span>
                       <?php endif; ?>
                     </div>
@@ -512,17 +539,20 @@ try {
           </form>
           <a class="commission-email" href="mailto:sangeun@hansulmusic.com">sangeun@hansulmusic.com</a>
           <section class="commission-payment" aria-labelledby="commission-payment-title">
-            <h4 id="commission-payment-title" class="commission-bank-heading">Payment</h4>
-            <p class="commission-bank-intro">This payment information applies to custom commissions, not regular score or recording purchases.</p>
+            <h4 id="commission-payment-title" class="commission-bank-heading">Commission process &amp; payment</h4>
+            <p class="commission-bank-intro">This process applies to custom composition and arrangement commissions, not regular score or recording purchases.</p>
             <ol>
               <li>
-                <span>For commissions in Korea, transfer payment after the quote and scope are confirmed. The amount and payment timing will be included with your quote.</span>
+                <span><strong>Discuss your project and review the quote:</strong> We will email the agreed scope, price, schedule, number of revisions, deliverables, and cancellation/refund terms. Please review and approve these details before proceeding.</span>
               </li>
               <li>
-                <span>For international commissions, we will email a PayPal invoice after the quote is agreed. You do not need to sign up or pay through the PayPal homepage first.</span>
+                <span><strong>Payment and project start:</strong> For commissions in Korea, transfer the deposit or full amount stated in the quote. For international commissions, we will send a PayPal invoice by email after you approve the quote. The invoice will show the final amount and any applicable fees. Work begins on the agreed schedule after payment is confirmed.</span>
               </li>
               <li>
-                <span>Work begins according to the agreed schedule once payment is confirmed.</span>
+                <span><strong>Review a preview:</strong> We will share a preview during production and make revisions within the scope and number agreed in the quote.</span>
+              </li>
+              <li>
+                <span><strong>Final payment and delivery:</strong> If a balance is due, transfer the stated amount. Once payment is confirmed, we will email the final score and audio files.</span>
               </li>
             </ol>
           </section>
@@ -547,7 +577,7 @@ try {
   </dialog>
   <script src="<?= $basePath ?>/js/signup-modal.js?v=13" defer></script>
   <script src="<?= $basePath ?>/js/currency-estimate.js?v=1" defer></script>
-  <script src="<?= $basePath ?>/js/navigation.js?v=2" defer></script>
+  <script src="<?= $basePath ?>/js/navigation.js?v=3" defer></script>
   <script src="<?= $basePath ?>/js/concert.js?v=7" defer></script>
   <script src="<?= $basePath ?>/js/commission-inquiry.js?v=1" defer></script>
 </body>

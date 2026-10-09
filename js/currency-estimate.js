@@ -1,5 +1,6 @@
 (() => {
-  const prices = [...document.querySelectorAll('[data-krw-price]')];
+  const prices = [...document.querySelectorAll('[data-krw-price]:not([data-paypal-fee-estimate])')];
+  const paypalFeeEstimates = [...document.querySelectorAll('[data-paypal-fee-estimate]')];
   const note = document.querySelector('[data-currency-note]');
   const status = note?.querySelector('[data-currency-status]');
   if (prices.length === 0) {
@@ -47,6 +48,14 @@
       }
       price.textContent = formatter.format(krw * rate);
     });
+    paypalFeeEstimates.forEach((estimate) => {
+      const krw = Number(estimate.dataset.krwPrice);
+      if (!Number.isFinite(krw) || krw < 0) {
+        throw new Error('Invalid KRW product price for PayPal fee estimate.');
+      }
+      const feeUsd = (krw * rate * 0.044) + 0.30;
+      estimate.textContent = `Estimated PayPal fee: ${formatter.format(feeUsd)} per order`;
+    });
   };
 
   const setStatus = (date, cached = false) => {
@@ -91,6 +100,9 @@
       }
       prices.forEach((price) => {
         price.textContent = 'USD estimate unavailable';
+      });
+      paypalFeeEstimates.forEach((estimate) => {
+        estimate.textContent = 'PayPal fee estimate unavailable';
       });
       if (status instanceof HTMLElement) {
         status.textContent = 'The exchange rate could not be loaded. Please try again later.';
