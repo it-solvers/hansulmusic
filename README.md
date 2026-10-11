@@ -3,10 +3,11 @@
 ## Member sign-in
 
 The home page modal supports email/password sign-in and account creation.
-New accounts are active immediately; email verification and social sign-in
-are deferred. The consolidated setup script
-`database/setup/001_member_auth.sql` adds password-hash storage and
-marketing-consent fields to the existing `members` table. Existing accounts
+The consolidated setup script `database/setup/001_member_auth.sql` creates the
+`members` and `member_email_verification_tokens` tables, including password
+hashes, email verification state, and marketing-consent fields. New accounts
+are active immediately; the email verification endpoint is prepared, but
+verification email delivery and social sign-in are deferred. Existing accounts
 without a password cannot sign in until a password recovery process is added.
 
 The PHP-FPM service must have these environment variables configured:
@@ -38,23 +39,27 @@ MariaDB. `video_type` identifies the page list (`1` = Concert Videos,
 the table definition. `video_title` is optional.
 
 The numbered SQL files under `database/setup/` are a consolidated baseline
-for a new site database where the application's base `members` table already
-has `member_id` and `email` columns. Run them once, in order, using the
-hosting provider's database manager:
+for a new site database. Run them once, in order, using the hosting provider's
+database manager:
 
-1. `001_member_auth.sql` — add password and marketing-consent fields to `members`.
+1. `001_member_auth.sql` — create `members` and
+   `member_email_verification_tokens`.
 2. `002_videos.sql` — create and seed the unified `videos` table.
 3. `003_shop_products.sql` — create and seed `products` and `product_assets`.
 4. `004_hymnal_catalog.sql` — create the final shared hymnal/praise-song table.
 5. `005_seed_hymnal.sql` — load the hymn catalog.
 6. `006_seed_praise_song.sql` — load the praise-song catalog.
 
-These files replace the old incremental migration history; they are not
-upgrade scripts. Do not run them against an existing database or re-run them
-after setup, because the schema and seed rows already exist there. Existing
-site databases need no changes for this file cleanup. The PHP pages use the
-same `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` environment variables
-as member sign-in.
+These files replace the old incremental migration history. Do not run them
+against an existing database or re-run them after setup, because the schema
+and seed rows already exist there. Existing site databases that already have
+the old `members` table should apply the equivalent columns and token table
+through a separate, reviewed upgrade before deploying this baseline.
+`007_drop_product_slug.sql삭제확인` is an obsolete, one-time upgrade script
+from the previous product schema. It is not part of the fresh-database
+baseline and should not be executed. The PHP pages use the same `DB_HOST`,
+`DB_NAME`, `DB_USER`, and `DB_PASSWORD` environment variables as member
+sign-in.
 
 To add a video later, insert its YouTube URL in the database manager:
 
@@ -80,7 +85,7 @@ in the hosting provider's database manager.
 `003_shop_products.sql` creates and seeds the `products` and `product_assets`
 tables. `products.is_active=1` means the product is displayed in the shop;
 `is_active=0` hides it while retaining the database row. The shop page reads
-active products in `sort_order` order. Product kind is `product_type` (1 = score, 2 = audio), one product per kind; it also links the English shop copy in `product-localization.php`. For an existing database, run `database/setup/007_drop_product_slug.sql` once as a DB admin to drop the old `slug` column. Product records, cover images, preview
+active products in `sort_order` order. Product kind is `product_type` (1 = score, 2 = audio), one product per kind; it also links the English shop copy in `product-localization.php`. The old `slug` migration is retained only as `database/setup/007_drop_product_slug.sql삭제확인` for deletion review. Product records, cover images, preview
 audio, downloadable files, and score preview images can be managed at
 `/admin-products.php`; the footer's small dot links to this page.
 Concert/YouTube videos, hymnals, and praise songs are managed at
